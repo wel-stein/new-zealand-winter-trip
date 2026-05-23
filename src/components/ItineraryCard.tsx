@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,16 +28,13 @@ const CATEGORY_GRADIENTS: Record<ItineraryItem['category'], [string, string]> = 
 };
 
 function CardImage({ item }: { item: ItineraryItem }) {
-  const [failed, setFailed] = useState(false);
-
-  if (item.imageUri && !failed) {
+  if (item.image) {
     return (
       <View style={styles.imageWrapper}>
         <Image
-          source={{ uri: item.imageUri }}
+          source={item.image}
           style={styles.image}
           resizeMode="cover"
-          onError={() => setFailed(true)}
         />
         <LinearGradient
           colors={['transparent', 'rgba(13,20,23,0.4)']}

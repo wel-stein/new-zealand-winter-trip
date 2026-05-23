@@ -1,36 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { Typography, Spacing, Radii } from '../constants/typography';
 import { HERO_CHAPTER } from '../data/itinerary';
+import IMAGES from '../data/images';
 
 const HERO_HEIGHT = 220;
-const COVER_PHOTO = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Aoraki-Mount_Cook_from_Hooker_Valley.jpg/1200px-Aoraki-Mount_Cook_from_Hooker_Valley.jpg';
 
 export function HeroSection() {
-  const [imgFailed, setImgFailed] = useState(false);
-
   return (
     <View style={styles.wrapper}>
       <View style={styles.heroContainer}>
-        {/* Cover photo or fallback gradient */}
-        {!imgFailed ? (
-          <Image
-            source={{ uri: COVER_PHOTO }}
-            style={StyleSheet.absoluteFill}
-            resizeMode="cover"
-            onError={() => setImgFailed(true)}
-          />
-        ) : (
-          <LinearGradient
-            colors={['#0d2e1c', '#1a4a3a', '#0b3d5e', '#162d45']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-        )}
+        <Image
+          source={IMAGES.hero_cover}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+        />
 
         {/* Dark overlay for text readability */}
         <LinearGradient
