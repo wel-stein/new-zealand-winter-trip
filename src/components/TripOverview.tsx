@@ -1,7 +1,7 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
-  StyleSheet, Platform, NativeSyntheticEvent, NativeScrollEvent,
+  StyleSheet, Platform, Animated, NativeSyntheticEvent, NativeScrollEvent,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
@@ -29,19 +29,45 @@ interface DatePickerDayProps {
 }
 
 function DatePickerDay({ day, dayName, weather, selected, onPress }: DatePickerDayProps) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const prevSelected = useRef(selected);
+
+  useEffect(() => {
+    if (selected && !prevSelected.current) {
+      // Spring bounce on selection
+      Animated.sequence([
+        Animated.spring(scaleAnim, {
+          toValue: 1.1,
+          useNativeDriver: true,
+          speed: 60,
+          bounciness: 10,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          speed: 20,
+          bounciness: 4,
+        }),
+      ]).start();
+    }
+    prevSelected.current = selected;
+  }, [selected, scaleAnim]);
+
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[styles.dayButton, selected && styles.dayButtonSelected]}
-    >
-      <Text style={[styles.dayName, selected && styles.dayNameSelected]}>{dayName}</Text>
-      <Text style={[styles.dayNumber, selected && styles.dayNumberSelected]}>{day}</Text>
-      <Ionicons
-        name={WEATHER_ICONS[weather]}
-        size={15}
-        color={selected ? Colors.onPrimaryContainer : Colors.onSurfaceVariant}
-      />
-    </TouchableOpacity>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity
+        onPress={onPress}
+        style={[styles.dayButton, selected && styles.dayButtonSelected]}
+      >
+        <Text style={[styles.dayName, selected && styles.dayNameSelected]}>{dayName}</Text>
+        <Text style={[styles.dayNumber, selected && styles.dayNumberSelected]}>{day}</Text>
+        <Ionicons
+          name={WEATHER_ICONS[weather]}
+          size={15}
+          color={selected ? Colors.onPrimaryContainer : Colors.onSurfaceVariant}
+        />
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
