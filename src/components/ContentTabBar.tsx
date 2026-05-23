@@ -25,7 +25,7 @@ export function ContentTabBar({ activeTab, onTabChange }: ContentTabBarProps) {
             color={activeTab === 'text' ? Colors.onPrimary : Colors.onSurfaceVariant}
           />
           <Text style={[styles.tabLabel, activeTab === 'text' && styles.tabLabelActive]}>
-            文字
+            行程
           </Text>
         </TouchableOpacity>
 
