@@ -140,7 +140,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
         description: '位于普卡基湖畔，可买到新鲜三文鱼刺身，边看湛蓝湖景边享用。彼得观景点（Peter\'s Lookout）在这附近，是拍"通往雪山笔直公路"的最佳位置。' },
       { id: '28-3', time: '13:30', title: '塔斯曼冰川景观步道', tag: '徒步', tagColor: TAG.activity, category: 'activity', image: IMAGES.tasman_glacier,
         description: '往返约 1 小时，需爬一段台阶，终点可俯瞰塔斯曼冰川湖和蓝色浮冰，下午走比较暖和。' },
-      { id: '28-4', time: '15:00', title: '胡克谷步道 — 走到第一座吊桥', tag: '徒步', tagColor: TAG.activity, category: 'activity', image: IMAGES.tasman_glacier,
+      { id: '28-4', time: '15:00', title: '胡克谷步道 — 走到第一座吊桥', tag: '徒步', tagColor: TAG.activity, category: 'activity', image: IMAGES.hooker_valley,
         description: '【最推荐】全程来回 3–4 小时，但带小孩走到第一座吊桥即可（约 15–20 分钟），俯瞰穆勒湖冰川水，景色壮观。起点：White Horse Hill 停车场，中途有公共厕所。' },
       { id: '28-5', time: '18:00', title: '酒店晚餐 & 库克山观星', tag: '餐饮', tagColor: TAG.dining, category: 'dining', image: IMAGES.hermitage_hotel,
         description: 'The Hermitage Hotel 落地窗正对库克山，视野极佳可享用晚餐。Old Mountaineers\' Café 更轻松，有披萨汉堡。库克山夜晚极静，是全球顶级观星胜地。' },
