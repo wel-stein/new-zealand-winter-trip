@@ -1,42 +1,40 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { Typography, Spacing, Radii } from '../constants/typography';
 import { HERO_CHAPTER } from '../data/itinerary';
 
-const { width } = Dimensions.get('window');
 const HERO_HEIGHT = 220;
-
-// Placeholder gradient used in place of a real landscape photo
-function LandscapeGradient() {
-  return (
-    <LinearGradient
-      colors={['#0d2e1c', '#1a4a3a', '#0b3d5e', '#162d45']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={StyleSheet.absoluteFill}
-    />
-  );
-}
+const COVER_PHOTO = 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Aoraki-Mount_Cook_from_Hooker_Valley.jpg/1200px-Aoraki-Mount_Cook_from_Hooker_Valley.jpg';
 
 export function HeroSection() {
+  const [imgFailed, setImgFailed] = useState(false);
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.heroContainer}>
-        <LandscapeGradient />
-
-        {/* Mountain silhouette decorative elements */}
-        <View style={styles.mountainLayer}>
-          <LinearGradient
-            colors={['transparent', 'rgba(13,46,28,0.6)', 'rgba(11,61,94,0.4)']}
-            style={styles.mountainOverlay}
+        {/* Cover photo or fallback gradient */}
+        {!imgFailed ? (
+          <Image
+            source={{ uri: COVER_PHOTO }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="cover"
+            onError={() => setImgFailed(true)}
           />
-        </View>
+        ) : (
+          <LinearGradient
+            colors={['#0d2e1c', '#1a4a3a', '#0b3d5e', '#162d45']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
 
+        {/* Dark overlay for text readability */}
         <LinearGradient
-          colors={['rgba(13,20,23,0.2)', 'rgba(13,20,23,0.7)']}
+          colors={['rgba(13,20,23,0.15)', 'rgba(13,20,23,0.75)']}
           style={styles.gradient}
         >
           <View style={styles.dateRow}>
@@ -61,12 +59,6 @@ const styles = StyleSheet.create({
     height: HERO_HEIGHT,
     borderRadius: Radii.lg,
     overflow: 'hidden',
-  },
-  mountainLayer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  mountainOverlay: {
-    flex: 1,
   },
   gradient: {
     flex: 1,
