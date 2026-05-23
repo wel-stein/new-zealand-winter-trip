@@ -132,3 +132,111 @@ export const DESTINATIONS = [
   { name: '皇后镇', nameEn: 'Queenstown', days: '5-8' },
   { name: '米尔福德峡湾', nameEn: 'Milford Sound', days: '9-11' },
 ];
+
+// ─── Hotel bookings (from Agoda) ─────────────────────────────────────────────
+
+export interface HotelBooking {
+  id: string;
+  name: string;
+  location: string;
+  /** Day-of-month for check-in. Days 25-31 = May; 1-4 = June. */
+  checkInDay: number;
+  checkOutDay: number;
+  checkInTime: string;
+  checkOutTime: string;
+  rooms: number;
+  bookings: number;
+  gradient: [string, string];
+}
+
+/**
+ * Encodes a day number to a comparable integer.
+ * May 25-31 → 525-531   |   June 1-4 → 601-604
+ */
+export function dayToNum(day: number): number {
+  return day >= 25 ? 500 + day : 600 + day;
+}
+
+/** Returns the hotel whose stay covers the given night, or null. */
+export function getHotelForDay(day: number): HotelBooking | null {
+  const n = dayToNum(day);
+  return (
+    HOTEL_BOOKINGS.find(
+      (h) => dayToNum(h.checkInDay) <= n && n < dayToNum(h.checkOutDay),
+    ) ?? null
+  );
+}
+
+/** Returns the next upcoming hotel after a given day (for empty-state preview). */
+export function getNextHotel(day: number): HotelBooking | null {
+  const n = dayToNum(day);
+  return (
+    HOTEL_BOOKINGS.find((h) => dayToNum(h.checkInDay) > n) ?? null
+  );
+}
+
+export const HOTEL_BOOKINGS: HotelBooking[] = [
+  {
+    id: 'hotel-give',
+    name: 'Hotel Give',
+    location: 'Christchurch',
+    checkInDay: 26, checkOutDay: 27,
+    checkInTime: '15:00', checkOutTime: '10:00',
+    rooms: 2, bookings: 2,
+    gradient: ['#0a2a40', '#0d3a5e'],
+  },
+  {
+    id: 'skyblue-tekapo',
+    name: 'Skyblue Tekapo',
+    location: 'Lake Tekapo',
+    checkInDay: 27, checkOutDay: 28,
+    checkInTime: '15:00', checkOutTime: '10:00',
+    rooms: 2, bookings: 2,
+    gradient: ['#0a3050', '#1a5a7a'],
+  },
+  {
+    id: 'glentanner',
+    name: 'Glentanner Park Centre',
+    location: 'Mount Cook',
+    checkInDay: 28, checkOutDay: 29,
+    checkInTime: '14:01', checkOutTime: '10:00',
+    rooms: 1, bookings: 1,
+    gradient: ['#1a1f2a', '#2a3545'],
+  },
+  {
+    id: 'alpine-motel',
+    name: 'Alpine Motel',
+    location: 'Wanaka',
+    checkInDay: 29, checkOutDay: 30,
+    checkInTime: '14:00', checkOutTime: '10:00',
+    rooms: 1, bookings: 1,
+    gradient: ['#0d2e1c', '#1a4a2e'],
+  },
+  {
+    id: 'holiday-inn-queenstown',
+    name: 'Holiday Inn Queenstown Frankton Road By IHG',
+    location: 'Queenstown',
+    checkInDay: 30, checkOutDay: 1, // May 30 → Jun 1
+    checkInTime: '14:00', checkOutTime: '10:00',
+    rooms: 2, bookings: 2,
+    gradient: ['#2a1a0a', '#4a2a10'],
+  },
+  {
+    id: 'aaa-thames',
+    name: 'AAA Thames Court Motel',
+    location: 'Oamaru',
+    checkInDay: 1, checkOutDay: 2, // Jun 1 → Jun 2
+    checkInTime: '14:00', checkOutTime: '10:00',
+    rooms: 1, bookings: 1,
+    gradient: ['#0a0f2a', '#1a2050'],
+  },
+  {
+    id: 'sudima-chch',
+    name: 'Sudima Christchurch Airport',
+    location: 'Christchurch',
+    checkInDay: 3, checkOutDay: 4, // Jun 3 → Jun 4
+    checkInTime: '14:00', checkOutTime: '11:00',
+    rooms: 1, bookings: 1,
+    gradient: ['#1a0a2a', '#3a1a50'],
+  },
+];
