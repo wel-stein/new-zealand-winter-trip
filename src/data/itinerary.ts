@@ -214,7 +214,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
         description: '奥马拉马（Omarama）附近的高山三文鱼农场，可亲手喂鱼并品尝新鲜刺身。也可在此顺道参观粘土悬崖（Clay Cliffs）。' },
       { id: '1-3', time: '12:30', title: '象石群 (Elephant Rocks)', tag: '景点', tagColor: TAG.activity, category: 'activity', image: IMAGES.elephant_rocks,
         description: '沿怀塔基河旁的神奇巨石群，仿佛远古巨象矗立大地，是免费自然奇观，也是电影取景地。' },
-      { id: '1-4', time: '15:30', title: '抵达奥马鲁 — 维多利亚历史区', tag: '抵达', tagColor: TAG.arrive, category: 'arrival', image: IMAGES.elephant_rocks,
+      { id: '1-4', time: '15:30', title: '抵达奥马鲁 — 维多利亚历史区', tag: '抵达', tagColor: TAG.arrive, category: 'arrival', image: IMAGES.oamaru_victorian,
         description: '充满英伦复古风的沿海小镇。维多利亚遗迹区建筑如童话，蒸汽朋克总部（Steampunk HQ）门口喷火的铁皮龙孩子超爱，Whitestone Cheese 奶酪工厂可试吃。入住 AAA Thames Court Motel。' },
       { id: '1-5', time: '日落', title: '小蓝企鹅归巢 — 世界最小企鹅', tag: '野生动物', tagColor: TAG.activity, category: 'activity', image: IMAGES.blue_penguin,
         description: '世界上体型最小的蓝企鹅（身高约 30cm）每天日落后成群结队从海里上岸回巢，摇摇摆摆超可爱，孩子一生难忘。普通看台成人 NZD 47，儿童 NZD 29；VIP 看台成人 NZD 63，儿童 NZD 37.5。' },
