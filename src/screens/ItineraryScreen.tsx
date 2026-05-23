@@ -52,7 +52,7 @@ export function ItineraryScreen() {
               <TipsSection />
             </>
           )}
-          {activeTab === 'map' && <MapView />}
+          {activeTab === 'map' && <MapView selectedDay={selectedDay} />}
           {activeTab === 'accommodation' && <AccommodationView selectedDay={selectedDay} />}
         </Animated.View>
       </ScrollView>
