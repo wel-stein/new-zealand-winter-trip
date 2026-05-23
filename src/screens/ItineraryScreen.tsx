@@ -7,6 +7,7 @@ import { TripOverview } from '../components/TripOverview';
 import { ContentTabBar, ContentTab } from '../components/ContentTabBar';
 import { ItinerarySection } from '../components/ItinerarySection';
 import { MapView } from '../components/MapView';
+import { AccommodationView } from '../components/AccommodationView';
 import { TipsSection } from '../components/TipsSection';
 
 export function ItineraryScreen() {
@@ -25,14 +26,14 @@ export function ItineraryScreen() {
         <TripOverview selectedDay={selectedDay} onDaySelect={setSelectedDay} />
         <ContentTabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {activeTab === 'text' ? (
+        {activeTab === 'text' && (
           <>
             <ItinerarySection />
             <TipsSection />
           </>
-        ) : (
-          <MapView />
         )}
+        {activeTab === 'map' && <MapView />}
+        {activeTab === 'accommodation' && <AccommodationView />}
       </ScrollView>
     </View>
   );
