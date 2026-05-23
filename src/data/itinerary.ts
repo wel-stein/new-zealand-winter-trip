@@ -57,6 +57,8 @@ export interface DayItinerary {
   day: number;
   location: string;
   dayTitle: string;
+  lat: number;
+  lng: number;
   items: ItineraryItem[];
 }
 
@@ -78,7 +80,7 @@ const TAG = {
 export const ITINERARY_BY_DAY: DayItinerary[] = [
   // ── May 25 ─────────────────────────────────────────────────────────────────
   {
-    day: 25, location: '吉隆坡 / 新加坡', dayTitle: '出发日',
+    day: 25, location: '吉隆坡 / 新加坡', dayTitle: '出发日', lat: 1.3521, lng: 103.8198,
     items: [
       { id: '25-1', time: '18:00', title: '抵达新加坡机场 T2', tag: '出发', tagColor: TAG.arrive, category: 'arrival',
         description: '办好 SG Arrival Card，准备开通漫游（新加坡+新西兰），检查行李是否符合航空公司要求。' },
@@ -91,7 +93,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
 
   // ── May 26 ─────────────────────────────────────────────────────────────────
   {
-    day: 26, location: '基督城 (Christchurch)', dayTitle: '抵达基督城',
+    day: 26, location: '基督城 (Christchurch)', dayTitle: '抵达基督城', lat: -43.5321, lng: 172.6362,
     items: [
       { id: '26-1', time: '16:25', title: '抵达基督城国际机场', tag: '抵达', tagColor: TAG.arrive, category: 'arrival',
         description: '完成入境手续，注意新西兰检疫申报，所有食品和植物产品须申报，违者罚款高达 NZD 400。' },
@@ -106,7 +108,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
 
   // ── May 27 ─────────────────────────────────────────────────────────────────
   {
-    day: 27, location: '蒂卡普湖 (Lake Tekapo)', dayTitle: '基督城 → 蒂卡普湖',
+    day: 27, location: '蒂卡普湖 (Lake Tekapo)', dayTitle: '基督城 → 蒂卡普湖', lat: -44.0037, lng: 170.4772,
     items: [
       { id: '27-1', time: '09:00', title: '出发 → 杰拉尔丁（Geraldine）', tag: '驾车', tagColor: TAG.drive, category: 'activity',
         description: '车程约 1.5 小时，在 Barker\'s Food Store & Eatery 停留喝咖啡、免费试吃各种果酱。建议在基督城或杰拉尔丁加满油。' },
@@ -127,7 +129,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
 
   // ── May 28 ─────────────────────────────────────────────────────────────────
   {
-    day: 28, location: '库克山国家公园 (Mt Cook)', dayTitle: '蒂卡普湖 → 库克山',
+    day: 28, location: '库克山国家公园 (Mt Cook)', dayTitle: '蒂卡普湖 → 库克山', lat: -43.7340, lng: 170.0960,
     items: [
       { id: '28-1', time: '09:30', title: '离开蒂卡普湖，途经普卡基湖', tag: '驾车', tagColor: TAG.drive, category: 'activity',
         description: '车程约 1.5 小时。备齐物资：库克山村内物资有限且较贵，建议在蒂卡普湖补满油并买好零食和午餐。' },
@@ -144,7 +146,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
 
   // ── May 29 ─────────────────────────────────────────────────────────────────
   {
-    day: 29, location: '瓦纳卡 (Wanaka)', dayTitle: '库克山 → 瓦纳卡',
+    day: 29, location: '瓦纳卡 (Wanaka)', dayTitle: '库克山 → 瓦纳卡', lat: -44.6933, lng: 169.1321,
     items: [
       { id: '29-1', time: '08:30', title: '清晨塔斯曼冰川步道（可选）', tag: '徒步', tagColor: TAG.activity, category: 'activity',
         description: '清晨光线照在雪山上非常漂亮，往返仅需 1 小时。精力充沛可在出发前完成，清晨视野最佳。' },
@@ -163,7 +165,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
 
   // ── May 30 ─────────────────────────────────────────────────────────────────
   {
-    day: 30, location: '皇后镇 (Queenstown)', dayTitle: '瓦纳卡 → 皇后镇',
+    day: 30, location: '皇后镇 (Queenstown)', dayTitle: '瓦纳卡 → 皇后镇', lat: -45.0312, lng: 168.6626,
     items: [
       { id: '30-1', time: '09:30', title: '文胸围栏 & 卡德罗纳酒店', tag: '打卡', tagColor: TAG.activity, category: 'activity',
         description: '出发约 20 分钟到达 Cardrona Bra Fence，挂满数千个彩色内衣，支持乳腺癌研究。正对面的卡德罗纳历史酒店（建于 1863 年）后花园带篝火，适合喝咖啡。' },
@@ -184,7 +186,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
 
   // ── May 31 ─────────────────────────────────────────────────────────────────
   {
-    day: 31, location: '格林诺奇 / 皇后镇', dayTitle: '皇后镇 — 格林诺奇一日游',
+    day: 31, location: '格林诺奇 / 皇后镇', dayTitle: '皇后镇 — 格林诺奇一日游', lat: -44.8482, lng: 168.3798,
     items: [
       { id: '31-1', time: '09:00', title: '驱车格林诺奇全景公路', tag: '驾车', tagColor: TAG.drive, category: 'activity',
         description: '这条 45 分钟的湖畔公路被评为"世界十大景观公路"之一，左手湛蓝湖水，右手巍峨雪山。建议在皇后镇加好油再出发。' },
@@ -201,7 +203,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
 
   // ── Jun 1 ──────────────────────────────────────────────────────────────────
   {
-    day: 1, location: '奥马鲁 (Oamaru)', dayTitle: '皇后镇 → 奥马鲁',
+    day: 1, location: '奥马鲁 (Oamaru)', dayTitle: '皇后镇 → 奥马鲁', lat: -45.0975, lng: 170.9708,
     items: [
       { id: '1-1', time: '08:30', title: '出发皇后镇 → 克伦威尔水果小镇', tag: '驾车', tagColor: TAG.drive, category: 'activity',
         description: '尽早出发为后面留足时间。Jones Family Fruit Stall 是必停站，购买当地新鲜水果和纯手工水果冰淇淋（Real Fruit Ice Cream），著名的巨型水果地标小镇。' },
@@ -218,7 +220,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
 
   // ── Jun 2 ──────────────────────────────────────────────────────────────────
   {
-    day: 2, location: '基督城 (Christchurch)', dayTitle: '奥马鲁 → 基督城',
+    day: 2, location: '基督城 (Christchurch)', dayTitle: '奥马鲁 → 基督城', lat: -43.5321, lng: 172.6362,
     items: [
       { id: '2-1', time: '09:00', title: '出发奥马鲁，途经 Waimate 壁画小镇', tag: '驾车', tagColor: TAG.drive, category: 'activity',
         description: '车程约 3 小时 15 分钟。Waimate 是安静的乡村历史小镇，镇上有巨大筒仓壁画（Silo Art），适合活动筋骨。' },
@@ -235,7 +237,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
 
   // ── Jun 3 ──────────────────────────────────────────────────────────────────
   {
-    day: 3, location: '基督城 (Christchurch)', dayTitle: '基督城城市探索',
+    day: 3, location: '基督城 (Christchurch)', dayTitle: '基督城城市探索', lat: -43.5321, lng: 172.6362,
     items: [
       { id: '3-1', time: '09:30', title: '基督城植物园 & 雅芳河泛舟', tag: '景点', tagColor: TAG.activity, category: 'activity',
         description: '漫步百年历史的英式植物园，可选择乘坐平底船（Punting on the Avon）欣赏河岸景色，人力撑竿手穿着传统礼服，非常有特色。' },
@@ -252,7 +254,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
 
   // ── Jun 4 ──────────────────────────────────────────────────────────────────
   {
-    day: 4, location: '基督城 → 新加坡/马来西亚', dayTitle: '返程日',
+    day: 4, location: '基督城 → 新加坡/马来西亚', dayTitle: '返程日', lat: -43.4894, lng: 172.5322,
     items: [
       { id: '4-1', time: '06:00', title: '抵达基督城机场，办理登机', tag: '出发', tagColor: TAG.arrive, category: 'departure',
         description: '提前 2.5 小时到达机场，完成 check-in 和安全检查。注意新西兰生物安全检查，未申报食品须在登机前丢弃。' },
