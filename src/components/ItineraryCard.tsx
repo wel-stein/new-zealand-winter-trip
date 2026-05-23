@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
@@ -19,18 +19,35 @@ const CATEGORY_ICONS: Record<ItineraryItem['category'], keyof typeof Ionicons.gl
   departure: 'airplane-outline',
 };
 
-// Decorative image placeholders per category
-function CardImagePlaceholder({ category }: { category: ItineraryItem['category'] }) {
-  const gradients: Record<ItineraryItem['category'], [string, string]> = {
-    arrival: ['#0d3a2c', '#1a5c47'],
-    activity: ['#0a2a40', '#1a4a6e'],
-    dining: ['#2a1a0a', '#4e3010'],
-    accommodation: ['#1a1a3a', '#2a2a5a'],
-    departure: ['#1a0a2a', '#3a1a5a'],
-  };
+const CATEGORY_GRADIENTS: Record<ItineraryItem['category'], [string, string]> = {
+  arrival: ['#0d3a2c', '#1a5c47'],
+  activity: ['#0a2a40', '#1a4a6e'],
+  dining: ['#2a1a0a', '#4e3010'],
+  accommodation: ['#1a1a3a', '#2a2a5a'],
+  departure: ['#1a0a2a', '#3a1a5a'],
+};
 
-  const [c1, c2] = gradients[category];
+function CardImage({ item }: { item: ItineraryItem }) {
+  const [failed, setFailed] = useState(false);
 
+  if (item.imageUri && !failed) {
+    return (
+      <View style={styles.imageWrapper}>
+        <Image
+          source={{ uri: item.imageUri }}
+          style={styles.image}
+          resizeMode="cover"
+          onError={() => setFailed(true)}
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(13,20,23,0.4)']}
+          style={styles.imageOverlay}
+        />
+      </View>
+    );
+  }
+
+  const [c1, c2] = CATEGORY_GRADIENTS[item.category];
   return (
     <View style={styles.imagePlaceholder}>
       <LinearGradient
@@ -40,7 +57,7 @@ function CardImagePlaceholder({ category }: { category: ItineraryItem['category'
         style={StyleSheet.absoluteFill}
       />
       <Ionicons
-        name={CATEGORY_ICONS[category]}
+        name={CATEGORY_ICONS[item.category]}
         size={32}
         color="rgba(255,255,255,0.25)"
       />
@@ -73,7 +90,7 @@ export function ItineraryCard({ item, isLast }: ItineraryCardProps) {
 
           <Text style={styles.description}>{item.description}</Text>
 
-          <CardImagePlaceholder category={item.category} />
+          <CardImage item={item} />
         </View>
       </View>
     </View>
@@ -149,6 +166,20 @@ const styles = StyleSheet.create({
     ...Typography.bodySm,
     color: Colors.onSurfaceVariant,
     lineHeight: 20,
+  },
+  imageWrapper: {
+    height: 140,
+    borderRadius: Radii.lg,
+    overflow: 'hidden',
+    marginTop: 4,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    top: '60%',
   },
   imagePlaceholder: {
     height: 120,
