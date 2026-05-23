@@ -28,13 +28,16 @@ const CATEGORY_GRADIENTS: Record<ItineraryItem['category'], [string, string]> = 
 };
 
 function CardImage({ item }: { item: ItineraryItem }) {
-  if (item.image) {
+  const [failed, setFailed] = React.useState(false);
+
+  if (item.imageUri && !failed) {
     return (
       <View style={styles.imageWrapper}>
         <Image
-          source={item.image}
+          source={{ uri: item.imageUri }}
           style={styles.image}
           resizeMode="cover"
+          onError={() => setFailed(true)}
         />
         <LinearGradient
           colors={['transparent', 'rgba(13,20,23,0.4)']}
