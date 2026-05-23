@@ -9,4 +9,4 @@ npm install
 npm start
 ```
 
-Scan the QR code with Expo Go on iOS or Android.
+Then scan the QR code with the Expo Go app on iOS or Android.
