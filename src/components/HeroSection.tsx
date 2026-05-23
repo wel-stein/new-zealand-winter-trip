@@ -7,7 +7,7 @@ import { Typography, Spacing, Radii } from '../constants/typography';
 import { HERO_CHAPTER } from '../data/itinerary';
 
 const HERO_HEIGHT = 220;
-const COVER_URL = 'https://images.pexels.com/photos/870711/pexels-photo-870711.jpeg?auto=compress&cs=tinysrgb&w=1200&h=600&dpr=1&fit=crop';
+const COVER_URL = 'https://www.majordomo.co.nz/wp-content/uploads/adobestock_231275108-1-900x675.jpeg';
 
 export function HeroSection() {
   const [failed, setFailed] = useState(false);
