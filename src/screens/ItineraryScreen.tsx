@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { View, ScrollView, StyleSheet, Animated } from 'react-native';
 import { Colors } from '../constants/colors';
 import { TopBar } from '../components/TopBar';
 import { HeroSection } from '../components/HeroSection';
@@ -14,6 +14,25 @@ export function ItineraryScreen() {
   const [selectedDay, setSelectedDay] = useState(25);
   const [activeTab, setActiveTab] = useState<ContentTab>('text');
 
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  const handleTabChange = useCallback((tab: ContentTab) => {
+    // Fade + slide down out
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 12, duration: 100, useNativeDriver: true }),
+    ]).start(() => {
+      setActiveTab(tab);
+      // Reset position above, then fade + slide down into view
+      slideAnim.setValue(-12);
+      Animated.parallel([
+        Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(slideAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+      ]).start();
+    });
+  }, [fadeAnim, slideAnim]);
+
   return (
     <View style={styles.container}>
       <TopBar />
@@ -24,16 +43,18 @@ export function ItineraryScreen() {
       >
         <HeroSection />
         <TripOverview selectedDay={selectedDay} onDaySelect={setSelectedDay} />
-        <ContentTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+        <ContentTabBar activeTab={activeTab} onTabChange={handleTabChange} />
 
-        {activeTab === 'text' && (
-          <>
-            <ItinerarySection />
-            <TipsSection />
-          </>
-        )}
-        {activeTab === 'map' && <MapView />}
-        {activeTab === 'accommodation' && <AccommodationView />}
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          {activeTab === 'text' && (
+            <>
+              <ItinerarySection />
+              <TipsSection />
+            </>
+          )}
+          {activeTab === 'map' && <MapView />}
+          {activeTab === 'accommodation' && <AccommodationView />}
+        </Animated.View>
       </ScrollView>
     </View>
   );
