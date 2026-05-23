@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
@@ -7,12 +7,18 @@ import { Typography, Spacing, Radii } from '../constants/typography';
 import { HERO_CHAPTER } from '../data/itinerary';
 import IMAGES from '../data/images';
 
-const HERO_HEIGHT = 220;
+// hero_cover.jpg natural dimensions: 900×675 (4:3)
+const IMAGE_ASPECT = 675 / 900;
+const MAX_HERO_HEIGHT = 360;
 
 export function HeroSection() {
+  const { width } = useWindowDimensions();
+  const heroWidth = width - Spacing.marginMobile * 2;
+  const heroHeight = Math.min(Math.round(heroWidth * IMAGE_ASPECT), MAX_HERO_HEIGHT);
+
   return (
     <View style={styles.wrapper}>
-      <View style={styles.heroContainer}>
+      <View style={[styles.heroContainer, { height: heroHeight }]}>
         <Image
           source={IMAGES.hero_cover}
           style={StyleSheet.absoluteFill}
@@ -43,7 +49,6 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
   },
   heroContainer: {
-    height: HERO_HEIGHT,
     borderRadius: Radii.lg,
     overflow: 'hidden',
   },
