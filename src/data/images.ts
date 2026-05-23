@@ -41,6 +41,9 @@ const IMAGES: Record<string, ImageSourcePropType> = {
   spitfire_square: require('../../assets/images/spitfire_square.jpg'),
   singapore_return: require('../../assets/images/singapore_return.jpg'),
   hero_cover: require('../../assets/images/hero_cover.jpg'),
+  wanaka_tree: require('../../assets/images/wanaka_tree.jpg'),
+  arrowtown: require('../../assets/images/arrowtown.jpg'),
+  fergburger: require('../../assets/images/fergburger.jpg'),
 };
 
 export default IMAGES;
