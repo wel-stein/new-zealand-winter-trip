@@ -157,7 +157,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
         description: '位于特威泽尔（Twizel）附近的高山三文鱼农场，可亲手喂鱼并品尝新鲜刺身，是库克山→瓦纳卡途中的必停站。建议在此加满油。' },
       { id: '29-3', time: '11:30', title: '奥马拉马粘土悬崖 (Clay Cliffs)', tag: '景点', tagColor: TAG.activity, category: 'activity', image: IMAGES.clay_cliffs,
         description: '小众震撼景点（需支付约 NZD 5 入场费），巨大尖塔状粘土岩层仿佛置身异世界或火星表面，令人叹为观止。' },
-      { id: '29-4', time: '12:30', title: '林迪斯山口顶峰观景台', tag: '景点', tagColor: TAG.activity, category: 'activity',
+      { id: '29-4', time: '12:30', title: '林迪斯山口顶峰观景台', tag: '景点', tagColor: TAG.activity, category: 'activity', image: IMAGES.lindis_pass,
         description: '全程最高海拔点，山坡覆盖金黄色 Tussock 草丛，在山顶停车场拍照留念。注意：冬季弯道多、可能有黑冰，谨慎驾驶。Tarras 小镇可停下喝咖啡。' },
       { id: '29-5', time: '14:00', title: '抵达瓦纳卡 — 孤树打卡', tag: '景点', tagColor: TAG.arrive, category: 'arrival', image: IMAGES.wanaka_tree,
         description: '瓦纳卡孤树（That Wanaka Tree）是新西兰被拍摄次数最多的树，建议傍晚日落前往，光线最美。入住 Alpine Motel。湖边有成熟步道，可租自行车绕湖骑行。' },

@@ -41,6 +41,7 @@ const IMAGES: Record<string, ImageSourcePropType> = {
   spitfire_square: require('../../assets/images/spitfire_square.jpg'),
   singapore_return: require('../../assets/images/singapore_return.jpg'),
   hero_cover: require('../../assets/images/hero_cover.jpg'),
+  lindis_pass: require('../../assets/images/lindis_pass.jpg'),
   oamaru_victorian: require('../../assets/images/oamaru_victorian.jpg'),
   melbourne_flight: require('../../assets/images/melbourne_flight.jpg'),
   hooker_valley: require('../../assets/images/hooker_valley.jpg'),
