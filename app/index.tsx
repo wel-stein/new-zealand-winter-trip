@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/src/constants/colors';
 import { ItineraryScreen } from '@/src/screens/ItineraryScreen';
+import { CurrencyScreen } from '@/src/screens/CurrencyScreen';
 import { BottomNav, NavTab } from '@/src/components/BottomNav';
 
 export default function Index() {
@@ -11,7 +12,13 @@ export default function Index() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.container}>
-        <ItineraryScreen />
+        <View style={styles.body}>
+          {activeTab === 'currency' ? (
+            <CurrencyScreen />
+          ) : (
+            <ItineraryScreen />
+          )}
+        </View>
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       </View>
     </SafeAreaView>
@@ -26,5 +33,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  body: {
+    flex: 1,
   },
 });
