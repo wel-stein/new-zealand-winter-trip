@@ -1,26 +1,32 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '../constants/colors';
 import { Typography, Spacing } from '../constants/typography';
 import { ItineraryCard } from './ItineraryCard';
-import { DAY_25_ITINERARY } from '../data/itinerary';
+import { getItineraryForDay } from '../data/itinerary';
 
-export function ItinerarySection() {
+interface ItinerarySectionProps {
+  selectedDay: number;
+}
+
+export function ItinerarySection({ selectedDay }: ItinerarySectionProps) {
+  const dayData = getItineraryForDay(selectedDay);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.sectionTitle}>每日行程</Text>
-        <TouchableOpacity>
-          <Text style={styles.viewAll}>查看全部</Text>
-        </TouchableOpacity>
+        <View>
+          <Text style={styles.sectionTitle}>{dayData.dayTitle}</Text>
+          <Text style={styles.location}>{dayData.location}</Text>
+        </View>
       </View>
 
       <View style={styles.timeline}>
-        {DAY_25_ITINERARY.map((item, index) => (
+        {dayData.items.map((item, index) => (
           <ItineraryCard
             key={item.id}
             item={item}
-            isLast={index === DAY_25_ITINERARY.length - 1}
+            isLast={index === dayData.items.length - 1}
           />
         ))}
       </View>
@@ -43,10 +49,11 @@ const styles = StyleSheet.create({
     ...Typography.headlineSm,
     color: Colors.onSurface,
   },
-  viewAll: {
-    ...Typography.labelMd,
-    color: Colors.primary,
+  location: {
+    ...Typography.bodySm,
+    color: Colors.onSurfaceVariant,
     fontSize: 13,
+    marginTop: 2,
   },
   timeline: {
     gap: 0,
