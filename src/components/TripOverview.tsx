@@ -1,9 +1,16 @@
-import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useRef, useCallback } from 'react';
+import {
+  View, Text, TouchableOpacity, ScrollView,
+  StyleSheet, Platform, NativeSyntheticEvent, NativeScrollEvent,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { Typography, Spacing, Radii } from '../constants/typography';
 import { DATE_PICKER_DAYS, TRIP_DAYS, TRIP_DESTINATIONS, WeatherType } from '../data/itinerary';
+
+const DAY_WIDTH = 56;
+const DAY_GAP = Spacing.sm; // 8 — gap between day chips
+const SNAP_INTERVAL = DAY_WIDTH + DAY_GAP;
 
 const WEATHER_ICONS: Record<WeatherType, keyof typeof Ionicons.glyphMap> = {
   'sunny': 'sunny-outline',
@@ -38,11 +45,7 @@ function DatePickerDay({ day, dayName, weather, selected, onPress }: DatePickerD
   );
 }
 
-interface MonthLabelProps {
-  label: string;
-}
-
-function MonthLabel({ label }: MonthLabelProps) {
+function MonthLabel({ label }: { label: string }) {
   return (
     <View style={styles.monthLabelWrapper}>
       <Text style={styles.monthLabel}>{label}</Text>
@@ -57,6 +60,42 @@ interface TripOverviewProps {
 }
 
 export function TripOverview({ selectedDay, onDaySelect }: TripOverviewProps) {
+  const scrollRef = useRef<ScrollView>(null);
+  // Tracks the current horizontal scroll offset so mouse-drag can compute deltas
+  const scrollX = useRef(0);
+  // Drag state for web mouse events
+  const drag = useRef({ active: false, startX: 0, startScrollX: 0 });
+
+  const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollX.current = e.nativeEvent.contentOffset.x;
+  }, []);
+
+  // --- Web-only mouse drag handlers ---
+  const onMouseDown = useCallback((e: any) => {
+    drag.current = { active: true, startX: e.pageX, startScrollX: scrollX.current };
+    // Show grabbing cursor while dragging
+    if (e.currentTarget?.style) e.currentTarget.style.cursor = 'grabbing';
+    e.preventDefault(); // prevent text selection
+  }, []);
+
+  const onMouseMove = useCallback((e: any) => {
+    if (!drag.current.active) return;
+    const dx = drag.current.startX - e.pageX;
+    scrollRef.current?.scrollTo({
+      x: Math.max(0, drag.current.startScrollX + dx),
+      animated: false,
+    });
+  }, []);
+
+  const onMouseUp = useCallback((e: any) => {
+    drag.current.active = false;
+    if (e.currentTarget?.style) e.currentTarget.style.cursor = 'grab';
+  }, []);
+
+  const webProps = Platform.OS === 'web'
+    ? { onMouseDown, onMouseMove, onMouseUp, onMouseLeave: onMouseUp }
+    : {};
+
   return (
     <View style={styles.container}>
       {/* Stats row */}
@@ -72,15 +111,23 @@ export function TripOverview({ selectedDay, onDaySelect }: TripOverviewProps) {
         </View>
       </View>
 
-      {/* Date picker – full May 25 → Jun 4 */}
+      {/* Date picker – May 25 → Jun 4, draggable */}
       <ScrollView
+        ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
+        decelerationRate="fast"
+        snapToInterval={SNAP_INTERVAL}
+        snapToAlignment="start"
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={styles.datePicker}
+        // Web: override cursor to indicate draggability
+        style={Platform.OS === 'web' ? (styles.scrollWeb as any) : undefined}
+        {...webProps}
       >
         {DATE_PICKER_DAYS.map((item, index) => {
-          const isFirstItem = index === 0;
-          const showMonthLabel = isFirstItem || item.monthStart;
+          const showMonthLabel = index === 0 || item.monthStart;
           return (
             <React.Fragment key={`${item.month}-${item.day}`}>
               {showMonthLabel && <MonthLabel label={item.month} />}
@@ -126,12 +173,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   datePicker: {
-    gap: Spacing.sm,
+    gap: DAY_GAP,
     alignItems: 'flex-end',
     paddingRight: Spacing.sm,
   },
+  scrollWeb: {
+    cursor: 'grab' as any,
+    userSelect: 'none' as any,
+  },
   dayButton: {
-    width: 56,
+    width: DAY_WIDTH,
     height: 80,
     borderRadius: Radii.md,
     backgroundColor: Colors.surfaceContainerHigh,
