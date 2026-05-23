@@ -1,0 +1,38 @@
+import { ImageSourcePropType } from 'react-native';
+
+const IMAGES: Record<string, ImageSourcePropType> = {
+  sg_airport: require('../../assets/images/sg_airport.jpg'),
+  chch_city: require('../../assets/images/chch_city.jpg'),
+  chch_botanic: require('../../assets/images/chch_botanic.jpg'),
+  chch_cardboard: require('../../assets/images/chch_cardboard.jpg'),
+  playground_mahy: require('../../assets/images/playground_mahy.jpg'),
+  tekapo_church: require('../../assets/images/tekapo_church.jpg'),
+  tekapo_lake: require('../../assets/images/tekapo_lake.jpg'),
+  tekapo_stars: require('../../assets/images/tekapo_stars.jpg'),
+  mt_cook: require('../../assets/images/mt_cook.jpg'),
+  pukaki: require('../../assets/images/pukaki.jpg'),
+  hooker: require('../../assets/images/hooker.jpg'),
+  tasman: require('../../assets/images/tasman.jpg'),
+  wanaka_tree: require('../../assets/images/wanaka_tree.jpg'),
+  puzzling: require('../../assets/images/puzzling.jpg'),
+  crown_range: require('../../assets/images/crown_range.jpg'),
+  arrowtown: require('../../assets/images/arrowtown.jpg'),
+  queenstown_view: require('../../assets/images/queenstown_view.jpg'),
+  queenstown_gondola: require('../../assets/images/queenstown_gondola.jpg'),
+  kawarau: require('../../assets/images/kawarau.jpg'),
+  fergburger: require('../../assets/images/fergburger.jpg'),
+  glenorchy_road: require('../../assets/images/glenorchy_road.jpg'),
+  bennetts: require('../../assets/images/bennetts.jpg'),
+  glenorchy_wharf: require('../../assets/images/glenorchy_wharf.jpg'),
+  oamaru_penguin: require('../../assets/images/oamaru_penguin.jpg'),
+  oamaru_vic: require('../../assets/images/oamaru_vic.jpg'),
+  elephant: require('../../assets/images/elephant.jpg'),
+  cromwell: require('../../assets/images/cromwell.jpg'),
+  lindis: require('../../assets/images/lindis.jpg'),
+  clay_cliffs: require('../../assets/images/clay_cliffs.jpg'),
+  rakaia: require('../../assets/images/rakaia.jpg'),
+  caroline: require('../../assets/images/caroline.jpg'),
+  hero_cover: require('../../assets/images/hero_cover.jpg'),
+};
+
+export default IMAGES;
