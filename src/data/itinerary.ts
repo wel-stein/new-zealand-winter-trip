@@ -278,13 +278,13 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
   {
     day: 3, location: '基督城 (Christchurch)', dayTitle: '基督城城市探索', lat: -43.5321, lng: 172.6362,
     items: [
-      { id: '3-1', time: '09:30', title: '基督城植物园 & 雅芳河泛舟', tag: '景点', tagColor: TAG.activity, category: 'activity', imageUri: IMG.chch_botanic,
+      { id: '3-1', time: '09:30', title: '基督城植物园 & 雅芳河泛舟', tag: '景点', tagColor: TAG.activity, category: 'activity', imageUri: 'https://media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/06/f2/69/f1.jpg',
         description: '漫步百年历史的英式植物园，可选择乘坐平底船（Punting on the Avon）欣赏河岸景色，人力撑竿手穿着传统礼服，非常有特色。' },
-      { id: '3-2', time: '11:30', title: '玛格丽特·马希游乐场 — 南半球最大', tag: '亲子', tagColor: TAG.activity, category: 'activity', imageUri: IMG.playground,
+      { id: '3-2', time: '11:30', title: '玛格丽特·马希游乐场 — 南半球最大', tag: '亲子', tagColor: TAG.activity, category: 'activity', imageUri: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/d4/2b/ed/arghyakolkata-margaret.jpg?w=700&h=400&s=1',
         description: '南半球最大的户外游乐场！双人飞天滑索、巨大攀爬塔、喷水嬉水区、超级滑梯……旁边有咖啡馆和干净厕所，孩子绝对玩到不想走。' },
-      { id: '3-3', time: '14:00', title: '纸教堂 & New Regent Street', tag: '景点', tagColor: TAG.activity, category: 'activity', imageUri: IMG.chch_cardboard,
+      { id: '3-3', time: '14:00', title: '纸教堂 & New Regent Street', tag: '景点', tagColor: TAG.activity, category: 'activity', imageUri: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/29/6f/5e/e1/side-view.jpg?w=1200&h=-1&s=1',
         description: '纸教堂（Cardboard Cathedral）是地震后用纸板建造的临时大教堂，充满创意。彩色西班牙风格的 New Regent Street 适合拍照和喝咖啡。Canterbury Museum 了解南岛历史。' },
-      { id: '3-4', time: '18:00', title: '还车 & 入住 Sudima 机场酒店', tag: '住宿', tagColor: TAG.hotel, category: 'accommodation',
+      { id: '3-4', time: '18:00', title: '还车 & 入住 Sudima 机场酒店', tag: '住宿', tagColor: TAG.hotel, category: 'accommodation', imageUri: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/24/17/7c/de/hotel-exterior.jpg?w=900&h=500&s=1',
         description: '在规定时间前完成还车手续，Sudima Christchurch Airport 酒店步行即可到机场，为明早出发做好准备。' },
       { id: '3-5', time: '18:30', title: 'Spitfire Square 告别晚餐', tag: '餐饮', tagColor: TAG.dining, category: 'dining',
         description: '步行至 Spitfire Square 享用丰盛告别晚餐，之后可去 Woolworths 超市买些纪念品和零食，最后整理行李准备明早出发。' },
@@ -297,7 +297,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
     items: [
       { id: '4-1', time: '06:00', title: '抵达基督城机场，办理登机', tag: '出发', tagColor: TAG.arrive, category: 'departure',
         description: '提前 2.5 小时到达机场，完成 check-in 和安全检查。注意新西兰生物安全检查，未申报食品须在登机前丢弃。' },
-      { id: '4-2', time: '08:40', title: '起飞 → 中转 → 返回新加坡', tag: '飞行', tagColor: TAG.flight, category: 'departure',
+      { id: '4-2', time: '08:40', title: '起飞 → 中转 → 返回新加坡', tag: '飞行', tagColor: TAG.flight, category: 'departure', imageUri: 'https://www.agoda.com/wp-content/uploads/2024/08/Featured-image-Reasons-to-travel-Singapore-1244x700.jpg',
         description: '飞行约 4 小时中转，停留约 2 小时后，再飞约 8 小时返回新加坡（约 18:00 抵达）。可预购 Causeway Link 或自驾返回马来西亚。' },
     ],
   },
