@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "New Zealand Winter Trip",
+    "slug": "new-zealand-winter-trip",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d1417"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aotearoa.wintertrip"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0d1417"
+      },
+      "package": "com.aotearoa.wintertrip"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "scheme": "nzwintertrip"
+  }
+}
