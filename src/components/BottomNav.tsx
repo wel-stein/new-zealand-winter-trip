@@ -5,7 +5,7 @@ import { Colors } from '../constants/colors';
 import { Typography, Spacing, Radii } from '../constants/typography';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export type NavTab = 'home' | 'itinerary' | 'explore' | 'currency';
+export type NavTab = 'itinerary' | 'currency';
 
 interface NavItem {
   id: NavTab;
@@ -15,9 +15,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'home',     label: '首页', icon: 'home-outline',            iconActive: 'home' },
   { id: 'itinerary',label: '行程', icon: 'map-outline',             iconActive: 'map' },
-  { id: 'explore',  label: '探索', icon: 'compass-outline',         iconActive: 'compass' },
   { id: 'currency', label: '换汇', icon: 'swap-horizontal-outline', iconActive: 'swap-horizontal' },
 ];
 

@@ -9,6 +9,7 @@ import {
   getHotelForDay,
   getNextHotel,
   dayToNum,
+  nightsBetween,
   HOTEL_BOOKINGS,
 } from '../data/itinerary';
 
@@ -31,8 +32,7 @@ interface HotelCardProps {
 }
 
 function HotelCard({ hotel, isCheckInDay, isLastNight }: HotelCardProps) {
-  const nightCount =
-    dayToNum(hotel.checkOutDay) - dayToNum(hotel.checkInDay);
+  const nightCount = nightsBetween(hotel.checkInDay, hotel.checkOutDay);
 
   return (
     <View style={styles.card}>
@@ -150,7 +150,7 @@ function TripSummary() {
     <View style={styles.summary}>
       <Text style={styles.summaryTitle}>行程住宿总览</Text>
       {HOTEL_BOOKINGS.map((h) => {
-        const nights = dayToNum(h.checkOutDay) - dayToNum(h.checkInDay);
+        const nights = nightsBetween(h.checkInDay, h.checkOutDay);
         return (
           <View key={h.id} style={styles.summaryRow}>
             <View style={[styles.summaryDot, { backgroundColor: h.gradient[1] }]} />
@@ -179,7 +179,7 @@ export function AccommodationView({ selectedDay }: AccommodationViewProps) {
   const isCheckInDay = hotel?.checkInDay === selectedDay;
   const isLastNight =
     hotel != null &&
-    dayToNum(hotel.checkOutDay) - dayToNum(selectedDay) === 1;
+    nightsBetween(selectedDay, hotel.checkOutDay) === 1;
 
   return (
     <View style={styles.container}>

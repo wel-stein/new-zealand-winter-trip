@@ -19,13 +19,6 @@ export interface ItineraryItem {
   category: 'arrival' | 'activity' | 'dining' | 'accommodation' | 'departure';
 }
 
-export interface TripDay {
-  date: string;
-  dayNumber: number;
-  location: string;
-  items: ItineraryItem[];
-}
-
 export interface TipCard {
   id: string;
   icon: string;
@@ -33,10 +26,8 @@ export interface TipCard {
   description: string;
 }
 
-export const TRIP_START = 'May 25';
-export const TRIP_END = 'June 4';
 export const TRIP_DAYS = 11;
-export const TRIP_DESTINATIONS = 4;
+export const TRIP_DESTINATIONS = 7;
 
 export const DATE_PICKER_DAYS: DayWeather[] = [
   // May
@@ -298,13 +289,6 @@ export const WINTER_TIPS: TipCard[] = [
   },
 ];
 
-export const DESTINATIONS = [
-  { name: '奥克兰', nameEn: 'Auckland', days: '1-2' },
-  { name: '罗托鲁瓦', nameEn: 'Rotorua', days: '3-4' },
-  { name: '皇后镇', nameEn: 'Queenstown', days: '5-8' },
-  { name: '米尔福德峡湾', nameEn: 'Milford Sound', days: '9-11' },
-];
-
 // ─── Hotel bookings (from Agoda) ─────────────────────────────────────────────
 
 export interface HotelBooking {
@@ -327,6 +311,13 @@ export interface HotelBooking {
  */
 export function dayToNum(day: number): number {
   return day >= 25 ? 500 + day : 600 + day;
+}
+
+/** Actual number of nights between two trip days (handles May→June boundary). */
+export function nightsBetween(fromDay: number, toDay: number): number {
+  const from = fromDay >= 25 ? fromDay - 25 : fromDay + 6;
+  const to = toDay >= 25 ? toDay - 25 : toDay + 6;
+  return to - from;
 }
 
 /** Returns the hotel whose stay covers the given night, or null. */
