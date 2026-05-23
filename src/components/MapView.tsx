@@ -1,7 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { Colors } from '../constants/colors';
 import { Typography, Spacing, Radii } from '../constants/typography';
 import { getItineraryForDay, ITINERARY_BY_DAY } from '../data/itinerary';
@@ -14,24 +13,94 @@ export function MapView({ selectedDay }: MapViewProps) {
   const dayData = getItineraryForDay(selectedDay);
   const currentIndex = ITINERARY_BY_DAY.findIndex((d) => d.day === selectedDay);
 
+  const mapHtml = useMemo(() => {
+    const allPoints = ITINERARY_BY_DAY.map((d) => ({
+      lat: d.lat,
+      lng: d.lng,
+      label: d.location,
+      day: d.day,
+      title: d.dayTitle,
+      active: d.day === selectedDay,
+    }));
+
+    const routeCoords = ITINERARY_BY_DAY.map((d) => `[${d.lat}, ${d.lng}]`).join(',');
+
+    return `<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body, #map { width: 100%; height: 100%; }
+  .active-popup .leaflet-popup-content-wrapper {
+    background: #1a2a1f; color: #e0e8e3; border: 1px solid #95d4b3;
+    border-radius: 10px; font-family: system-ui;
+  }
+  .active-popup .leaflet-popup-tip { background: #1a2a1f; }
+  .active-popup .leaflet-popup-content { margin: 8px 12px; }
+  .popup-title { font-size: 13px; font-weight: 600; color: #95d4b3; }
+  .popup-loc { font-size: 11px; color: #b0c4b8; margin-top: 2px; }
+</style>
+</head><body>
+<div id="map"></div>
+<script>
+  var map = L.map('map', { zoomControl: false, attributionControl: false })
+    .setView([${dayData.lat}, ${dayData.lng}], ${selectedDay === 25 ? 5 : 9});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 18
+  }).addTo(map);
+
+  // Route polyline
+  var route = [${routeCoords}];
+  L.polyline(route.slice(1), { color: '#95d4b366', weight: 2, dashArray: '6,8' }).addTo(map);
+
+  // Markers
+  var points = ${JSON.stringify(allPoints)};
+  points.forEach(function(p, i) {
+    if (i === 0 && !p.active) return; // skip Singapore unless selected
+    var icon = L.divIcon({
+      className: '',
+      html: p.active
+        ? '<div style="width:28px;height:28px;border-radius:50%;background:#1a5a3a;border:3px solid #95d4b3;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px #95d4b366"><div style="width:8px;height:8px;border-radius:50%;background:#95d4b3"></div></div>'
+        : '<div style="width:10px;height:10px;border-radius:50%;background:#95d4b355;border:1px solid #95d4b344"></div>',
+      iconSize: p.active ? [28, 28] : [10, 10],
+      iconAnchor: p.active ? [14, 14] : [5, 5]
+    });
+    var marker = L.marker([p.lat, p.lng], { icon: icon }).addTo(map);
+    if (p.active) {
+      marker.bindPopup(
+        '<div class="popup-title">' + p.title + '</div><div class="popup-loc">' + p.label + '</div>',
+        { className: 'active-popup', closeButton: false, autoClose: false, closeOnClick: false }
+      ).openPopup();
+    }
+  });
+
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+</script>
+</body></html>`;
+  }, [selectedDay, dayData.lat, dayData.lng]);
+
   return (
     <View style={styles.container}>
-      {/* Map placeholder showing current location */}
-      <View style={styles.mapPlaceholder}>
-        <LinearGradient
-          colors={['#0a1f2e', '#0d3324', '#162d45']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <View style={styles.locationPin}>
-          <Ionicons name="location" size={28} color={Colors.primary} />
-        </View>
-        <Text style={styles.mapLabel}>{dayData.location}</Text>
-        <Text style={styles.mapSubLabel}>{dayData.dayTitle}</Text>
+      {/* Interactive map */}
+      <View style={styles.mapContainer}>
+        {Platform.OS === 'web' ? (
+          <iframe
+            srcDoc={mapHtml}
+            style={{ width: '100%', height: '100%', border: 'none', borderRadius: 12 } as any}
+          />
+        ) : (
+          <WebView
+            source={{ html: mapHtml }}
+            style={styles.webview}
+            scrollEnabled={false}
+            javaScriptEnabled
+          />
+        )}
       </View>
 
-      {/* 11-day trip progress bar */}
+      {/* Trip progress bar */}
       <View style={styles.progressRow}>
         {ITINERARY_BY_DAY.map((d, index) => {
           const isActive = d.day === selectedDay;
@@ -57,7 +126,7 @@ export function MapView({ selectedDay }: MapViewProps) {
         <Text style={styles.progressLabelText}>6月4日</Text>
       </View>
 
-      {/* Today's stops as a timeline */}
+      {/* Today's stops */}
       <View style={styles.stopsCard}>
         <Text style={styles.sectionTitle}>今日行程路线</Text>
         {dayData.items.map((item, index) => {
@@ -93,37 +162,17 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxxl,
   },
 
-  // Map placeholder
-  mapPlaceholder: {
-    height: 180,
+  // Map
+  mapContainer: {
+    height: 300,
     borderRadius: Radii.lg,
     overflow: 'hidden',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
     borderWidth: 1,
     borderColor: Colors.cardStroke,
   },
-  locationPin: {
-    width: 48,
-    height: 48,
-    borderRadius: Radii.full,
-    backgroundColor: Colors.primaryContainer,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  mapLabel: {
-    ...Typography.headlineSm,
-    color: Colors.onSurface,
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  mapSubLabel: {
-    ...Typography.bodySm,
-    color: Colors.onSurfaceVariant,
-    fontSize: 12,
-    textAlign: 'center',
+  webview: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
 
   // Progress bar
@@ -135,7 +184,7 @@ const styles = StyleSheet.create({
   progressDot: {
     width: 8,
     height: 8,
-    borderRadius: Radii.full,
+    borderRadius: 999,
     backgroundColor: Colors.outlineVariant,
     alignItems: 'center',
     justifyContent: 'center',
@@ -153,7 +202,7 @@ const styles = StyleSheet.create({
   progressDotInner: {
     width: 5,
     height: 5,
-    borderRadius: Radii.full,
+    borderRadius: 999,
     backgroundColor: Colors.primary,
   },
   progressLine: {
@@ -205,7 +254,7 @@ const styles = StyleSheet.create({
   stopDot: {
     width: 10,
     height: 10,
-    borderRadius: Radii.full,
+    borderRadius: 999,
   },
   stopLine: {
     flex: 1,
