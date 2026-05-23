@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/src/constants/colors';
 import { ItineraryScreen } from '@/src/screens/ItineraryScreen';
 import { CurrencyScreen } from '@/src/screens/CurrencyScreen';
+import { EmergencyScreen } from '@/src/screens/EmergencyScreen';
 import { BottomNav, NavTab } from '@/src/components/BottomNav';
 
 export default function Index() {
@@ -13,11 +14,9 @@ export default function Index() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.container}>
         <View style={styles.body}>
-          {activeTab === 'currency' ? (
-            <CurrencyScreen />
-          ) : (
-            <ItineraryScreen />
-          )}
+          {activeTab === 'currency'  && <CurrencyScreen />}
+          {activeTab === 'emergency' && <EmergencyScreen />}
+          {activeTab === 'itinerary' && <ItineraryScreen />}
         </View>
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       </View>

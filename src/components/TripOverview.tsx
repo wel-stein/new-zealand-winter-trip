@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useEffect, useState } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
   StyleSheet, Platform, Animated, NativeSyntheticEvent, NativeScrollEvent,
@@ -7,11 +7,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { Typography, Spacing, Radii } from '../constants/typography';
-import { DATE_PICKER_DAYS, TRIP_DAYS, TRIP_DESTINATIONS, WeatherType, getItineraryForDay } from '../data/itinerary';
+import { DATE_PICKER_DAYS, TRIP_DAYS, TRIP_DESTINATIONS, WeatherType } from '../data/itinerary';
+import { WeatherData } from '../hooks/useWeather';
 
 const DAY_WIDTH = 56;
 const DAY_GAP = Spacing.sm; // 8 — gap between day chips
 const SNAP_INTERVAL = DAY_WIDTH + DAY_GAP;
+const MONTH_LABEL_APPROX = 36; // approximate rendered width of a month label
 
 const WEATHER_ICONS: Record<WeatherType, keyof typeof Ionicons.glyphMap> = {
   'sunny': 'sunny-outline',
@@ -81,88 +83,41 @@ function MonthLabel({ label }: { label: string }) {
   );
 }
 
-// ─── WMO weather code → icon + label ─────────────────────────────────────────
-
-const WMO_MAP: Record<number, { icon: keyof typeof Ionicons.glyphMap; label: string }> = {
-  0: { icon: 'sunny', label: '晴' },
-  1: { icon: 'sunny', label: '大致晴' },
-  2: { icon: 'partly-sunny', label: '多云' },
-  3: { icon: 'cloudy', label: '阴天' },
-  45: { icon: 'cloudy', label: '有雾' },
-  48: { icon: 'cloudy', label: '雾凇' },
-  51: { icon: 'rainy', label: '细雨' },
-  53: { icon: 'rainy', label: '小雨' },
-  55: { icon: 'rainy', label: '中雨' },
-  61: { icon: 'rainy', label: '小雨' },
-  63: { icon: 'rainy', label: '中雨' },
-  65: { icon: 'rainy', label: '大雨' },
-  71: { icon: 'snow', label: '小雪' },
-  73: { icon: 'snow', label: '中雪' },
-  75: { icon: 'snow', label: '大雪' },
-  77: { icon: 'snow', label: '雪粒' },
-  80: { icon: 'rainy', label: '阵雨' },
-  81: { icon: 'rainy', label: '中阵雨' },
-  82: { icon: 'thunderstorm', label: '暴雨' },
-  85: { icon: 'snow', label: '阵雪' },
-  86: { icon: 'snow', label: '大阵雪' },
-  95: { icon: 'thunderstorm', label: '雷暴' },
-  96: { icon: 'thunderstorm', label: '雷暴冰雹' },
-  99: { icon: 'thunderstorm', label: '雷暴大冰雹' },
-};
-
-function getWmo(code: number) {
-  return WMO_MAP[code] ?? WMO_MAP[Math.floor(code / 10) * 10] ?? { icon: 'cloudy' as const, label: '未知' };
-}
-
-interface WeatherData {
-  temp: number;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-}
-
-function useWeather(selectedDay: number) {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    const dayData = getItineraryForDay(selectedDay);
-
-    setLoading(true);
-    fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${dayData.lat}&longitude=${dayData.lng}&current=temperature_2m,weather_code&timezone=auto`
-    )
-      .then((r) => r.json())
-      .then((json) => {
-        if (cancelled) return;
-        const code: number = json?.current?.weather_code ?? 3;
-        const temp: number = json?.current?.temperature_2m ?? 0;
-        const wmo = getWmo(code);
-        setWeather({ temp: Math.round(temp), icon: wmo.icon, label: wmo.label });
-      })
-      .catch(() => {
-        if (!cancelled) setWeather(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => { cancelled = true; };
-  }, [selectedDay]);
-
-  return { weather, loading };
-}
-
 interface TripOverviewProps {
   selectedDay: number;
   onDaySelect: (day: number) => void;
+  weather?: WeatherData | null;
+  weatherLoading?: boolean;
+  weatherStale?: boolean;
 }
 
-export function TripOverview({ selectedDay, onDaySelect }: TripOverviewProps) {
-  const { weather, loading: weatherLoading } = useWeather(selectedDay);
+export function TripOverview({
+  selectedDay,
+  onDaySelect,
+  weather,
+  weatherLoading,
+  weatherStale,
+}: TripOverviewProps) {
   const scrollRef = useRef<ScrollView>(null);
   const scrollX = useRef(0);
   const drag = useRef({ active: false, startX: 0, startScrollX: 0 });
+
+  // Scroll to the selected day chip on first render (jump-to-today)
+  useEffect(() => {
+    const todayIndex = DATE_PICKER_DAYS.findIndex((d) => d.day === selectedDay);
+    if (todayIndex <= 0) return;
+    const labelsBeforeCount = DATE_PICKER_DAYS.slice(0, todayIndex).filter((d) => d.monthStart).length;
+    const offset =
+      MONTH_LABEL_APPROX +
+      todayIndex * (DAY_WIDTH + DAY_GAP) +
+      labelsBeforeCount * (MONTH_LABEL_APPROX + DAY_GAP) -
+      DAY_GAP;
+    const t = setTimeout(() => {
+      scrollRef.current?.scrollTo({ x: Math.max(0, offset), animated: true });
+    }, 300);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally run once on mount
 
   const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     scrollX.current = e.nativeEvent.contentOffset.x;
@@ -202,13 +157,16 @@ export function TripOverview({ selectedDay, onDaySelect }: TripOverviewProps) {
           <Ionicons name="time-outline" size={16} color={Colors.primary} />
           <Text style={styles.statText}>{TRIP_DAYS}天 · {TRIP_DESTINATIONS}个目的地</Text>
         </View>
-        <View style={styles.weatherStrip}>
+        <View style={[styles.weatherStrip, weatherStale && styles.weatherStripStale]}>
           {weatherLoading ? (
             <ActivityIndicator size="small" color={Colors.primary} />
           ) : weather ? (
             <>
+              {weatherStale && (
+                <Ionicons name="warning-outline" size={12} color={Colors.secondary} />
+              )}
               <Ionicons name={weather.icon} size={18} color={Colors.primary} />
-              <Text style={styles.weatherTemp}>{weather.temp}°C</Text>
+              <Text style={styles.weatherTemp}>{weatherStale ? '~' : ''}{weather.temp}°C</Text>
               <Text style={styles.weatherLabel}>{weather.label}</Text>
             </>
           ) : (
@@ -283,6 +241,9 @@ const styles = StyleSheet.create({
     borderRadius: Radii.full,
     borderWidth: 1,
     borderColor: Colors.cardStroke,
+  },
+  weatherStripStale: {
+    borderColor: Colors.secondary + '66',
   },
   weatherTemp: {
     ...Typography.labelMd,

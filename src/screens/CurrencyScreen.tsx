@@ -5,31 +5,62 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../constants/colors';
 import { Typography, Spacing, Radii } from '../constants/typography';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types & constants ────────────────────────────────────────────────────────
 
-type Direction = 'NZD_TO_MYR' | 'MYR_TO_NZD';
+type PairKey = 'NZD_MYR' | 'NZD_SGD' | 'MYR_SGD';
 
-const FALLBACK_RATE = 2.78; // 1 NZD = 2.78 MYR (fallback if API unreachable)
+interface Rates {
+  nzdMyr: number;
+  nzdSgd: number;
+}
+
+const FALLBACK: Rates = { nzdMyr: 2.78, nzdSgd: 0.83 };
+const RATES_CACHE_KEY = 'currency_rates_v2';
 const QUICK_AMOUNTS = [50, 100, 200, 500, 1000];
 
-// ─── Currency card ────────────────────────────────────────────────────────────
+// ─── Pair config ──────────────────────────────────────────────────────────────
 
-interface CurrencyCardProps {
+interface CurrencyInfo {
   flag: string;
   code: string;
   name: string;
-  value: string;
-  editable: boolean;
-  onChangeText?: (v: string) => void;
-  highlight?: boolean;
 }
 
-function CurrencyCard({
-  flag, code, name, value, editable, onChangeText, highlight,
-}: CurrencyCardProps) {
+const CURRENCY_INFO: Record<string, CurrencyInfo> = {
+  NZD: { flag: '🇳🇿', code: 'NZD', name: '新西兰元'      },
+  MYR: { flag: '🇲🇾', code: 'MYR', name: '马来西亚令吉'  },
+  SGD: { flag: '🇸🇬', code: 'SGD', name: '新加坡元'      },
+};
+
+interface PairConfig {
+  label: string;
+  from: keyof typeof CURRENCY_INFO;
+  to:   keyof typeof CURRENCY_INFO;
+  getRate: (r: Rates) => number;
+}
+
+const PAIRS: Record<PairKey, PairConfig> = {
+  NZD_MYR: { label: 'NZD ↔ RM',  from: 'NZD', to: 'MYR', getRate: (r) => r.nzdMyr           },
+  NZD_SGD: { label: 'NZD ↔ S$',  from: 'NZD', to: 'SGD', getRate: (r) => r.nzdSgd           },
+  MYR_SGD: { label: 'RM ↔ S$',   from: 'MYR', to: 'SGD', getRate: (r) => r.nzdSgd / r.nzdMyr},
+};
+
+const PAIR_KEYS: PairKey[] = ['NZD_MYR', 'NZD_SGD', 'MYR_SGD'];
+
+// ─── Currency card ────────────────────────────────────────────────────────────
+
+interface CurrencyCardProps extends CurrencyInfo {
+  value:        string;
+  editable:     boolean;
+  onChangeText?: (v: string) => void;
+  highlight?:   boolean;
+}
+
+function CurrencyCard({ flag, code, name, value, editable, onChangeText, highlight }: CurrencyCardProps) {
   return (
     <View style={[styles.currencyCard, highlight && styles.currencyCardActive]}>
       <View style={styles.currencyLabel}>
@@ -61,80 +92,97 @@ function CurrencyCard({
 
 export function CurrencyScreen() {
   const insets = useSafeAreaInsets();
-  const [rate, setRate] = useState<number>(FALLBACK_RATE);
-  const [rateLabel, setRateLabel] = useState('正在获取汇率…');
-  const [loading, setLoading] = useState(true);
-  const [direction, setDirection] = useState<Direction>('NZD_TO_MYR');
-  const [fromValue, setFromValue] = useState('100');
 
-  // Rotation animation for the swap button
+  const [rates, setRates]         = useState<Rates>(FALLBACK);
+  const [rateLabel, setRateLabel] = useState('正在获取汇率…');
+  const [loading, setLoading]     = useState(true);
+  const [stale, setStale]         = useState(false);
+
+  const [activePair, setActivePair] = useState<PairKey>('NZD_MYR');
+  const [swapped, setSwapped]       = useState(false);
+  const [fromValue, setFromValue]   = useState('100');
+
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
-  // ── Fetch live rate ────────────────────────────────────────────────────────
-  const fetchRate = useCallback(async () => {
+  // ── Fetch live rates ───────────────────────────────────────────────────────
+  const fetchRates = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('https://open.er-api.com/v6/latest/NZD');
+      const res  = await fetch('https://open.er-api.com/v6/latest/NZD');
       const json = await res.json();
-      if (json?.rates?.MYR) {
-        const r: number = json.rates.MYR;
-        setRate(r);
+      if (json?.rates?.MYR && json?.rates?.SGD) {
+        const fresh: Rates = { nzdMyr: json.rates.MYR, nzdSgd: json.rates.SGD };
+        setRates(fresh);
+        setStale(false);
         const now = new Date();
         setRateLabel(
           `实时汇率 · ${now.getHours().toString().padStart(2, '0')}:${now
-            .getMinutes()
-            .toString()
-            .padStart(2, '0')} 更新`,
+            .getMinutes().toString().padStart(2, '0')} 更新`,
         );
+        await AsyncStorage.setItem(RATES_CACHE_KEY, JSON.stringify(fresh));
       } else {
-        throw new Error('no MYR rate');
+        throw new Error('missing rates');
       }
     } catch {
-      setRate(FALLBACK_RATE);
-      setRateLabel(`参考汇率 · 1 NZD ≈ ${FALLBACK_RATE.toFixed(2)} RM`);
+      // Try cached rates
+      try {
+        const cached = await AsyncStorage.getItem(RATES_CACHE_KEY);
+        if (cached) {
+          setRates(JSON.parse(cached));
+          setStale(true);
+          setRateLabel('⚠ 数据可能过时，无法连接网络');
+        } else {
+          setRates(FALLBACK);
+          setStale(true);
+          setRateLabel(`参考汇率 · 1 NZD ≈ ${FALLBACK.nzdMyr.toFixed(2)} RM`);
+        }
+      } catch {
+        setRates(FALLBACK);
+        setStale(true);
+        setRateLabel(`参考汇率 · 1 NZD ≈ ${FALLBACK.nzdMyr.toFixed(2)} RM`);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchRate(); }, [fetchRate]);
+  useEffect(() => { fetchRates(); }, [fetchRates]);
 
   // ── Conversion ─────────────────────────────────────────────────────────────
-  const numFrom = parseFloat(fromValue) || 0;
-  const converted =
-    direction === 'NZD_TO_MYR'
-      ? (numFrom * rate).toFixed(2)
-      : (numFrom / rate).toFixed(2);
+  const pair = PAIRS[activePair];
+  const baseRate = pair.getRate(rates);
+  const effectiveRate = swapped ? 1 / baseRate : baseRate;
 
-  const fromCurrency =
-    direction === 'NZD_TO_MYR'
-      ? { flag: '🇳🇿', code: 'NZD', name: '新西兰元' }
-      : { flag: '🇲🇾', code: 'MYR', name: '马来西亚令吉' };
+  const numFrom  = parseFloat(fromValue) || 0;
+  const converted = (numFrom * effectiveRate).toFixed(2);
 
-  const toCurrency =
-    direction === 'NZD_TO_MYR'
-      ? { flag: '🇲🇾', code: 'MYR', name: '马来西亚令吉' }
-      : { flag: '🇳🇿', code: 'NZD', name: '新西兰元' };
+  const fromInfo = swapped ? CURRENCY_INFO[pair.to]   : CURRENCY_INFO[pair.from];
+  const toInfo   = swapped ? CURRENCY_INFO[pair.from] : CURRENCY_INFO[pair.to];
+
+  const rateDisplay = swapped
+    ? `1 ${toInfo.code} = ${(1 / baseRate).toFixed(4)} ${fromInfo.code}`
+    : `1 ${fromInfo.code} = ${baseRate.toFixed(4)} ${toInfo.code}`;
 
   // ── Swap direction ─────────────────────────────────────────────────────────
   const handleSwap = useCallback(() => {
     Animated.sequence([
       Animated.timing(rotateAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
-      Animated.timing(rotateAnim, { toValue: 0, duration: 0, useNativeDriver: true }),
+      Animated.timing(rotateAnim, { toValue: 0, duration: 0,   useNativeDriver: true }),
     ]).start();
-    setDirection((d) => (d === 'NZD_TO_MYR' ? 'MYR_TO_NZD' : 'NZD_TO_MYR'));
+    setSwapped((s) => !s);
     setFromValue('100');
   }, [rotateAnim]);
 
   const rotateInterpolate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
+    inputRange: [0, 1], outputRange: ['0deg', '180deg'],
   });
 
-  // ── Rate card numbers ──────────────────────────────────────────────────────
-  const nzdToMyrDisplay = direction === 'NZD_TO_MYR'
-    ? `1 NZD = ${rate.toFixed(4)} RM`
-    : `1 RM = ${(1 / rate).toFixed(4)} NZD`;
+  // ── Pair change ────────────────────────────────────────────────────────────
+  const handlePairChange = useCallback((key: PairKey) => {
+    setActivePair(key);
+    setSwapped(false);
+    setFromValue('100');
+  }, []);
 
   return (
     <ScrollView
@@ -146,16 +194,32 @@ export function CurrencyScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>货币兑换</Text>
-        <Text style={styles.subtitle}>NZD · 新西兰元  ↔  RM · 马来西亚令吉</Text>
+        <Text style={styles.subtitle}>NZD · 新西兰元  ↔  RM · 马来西亚令吉  ↔  S$ · 新加坡元</Text>
+      </View>
+
+      {/* Pair selector tabs */}
+      <View style={styles.pairTabs}>
+        {PAIR_KEYS.map((key) => (
+          <TouchableOpacity
+            key={key}
+            onPress={() => handlePairChange(key)}
+            style={[styles.pairTab, activePair === key && styles.pairTabActive]}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.pairTabText, activePair === key && styles.pairTabTextActive]}>
+              {PAIRS[key].label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Live rate strip */}
-      <View style={styles.rateStrip}>
+      <View style={[styles.rateStrip, stale && styles.rateStripStale]}>
         <View style={styles.rateInfo}>
-          <Text style={styles.rateMain}>{nzdToMyrDisplay}</Text>
-          <Text style={styles.rateLabel}>{rateLabel}</Text>
+          <Text style={styles.rateMain}>{rateDisplay}</Text>
+          <Text style={[styles.rateLabel, stale && styles.rateLabelStale]}>{rateLabel}</Text>
         </View>
-        <TouchableOpacity onPress={fetchRate} style={styles.refreshBtn} disabled={loading}>
+        <TouchableOpacity onPress={fetchRates} style={styles.refreshBtn} disabled={loading}>
           {loading
             ? <ActivityIndicator size="small" color={Colors.primary} />
             : <Ionicons name="refresh-outline" size={18} color={Colors.primary} />}
@@ -164,7 +228,7 @@ export function CurrencyScreen() {
 
       {/* From card */}
       <CurrencyCard
-        {...fromCurrency}
+        {...fromInfo}
         value={fromValue}
         editable
         onChangeText={(v) => setFromValue(v.replace(/[^0-9.]/g, ''))}
@@ -183,17 +247,11 @@ export function CurrencyScreen() {
       </View>
 
       {/* To card */}
-      <CurrencyCard
-        {...toCurrency}
-        value={converted}
-        editable={false}
-      />
+      <CurrencyCard {...toInfo} value={converted} editable={false} />
 
       {/* Quick amounts */}
       <View style={styles.quickSection}>
-        <Text style={styles.quickLabel}>
-          快速金额 ({fromCurrency.code})
-        </Text>
+        <Text style={styles.quickLabel}>快速金额 ({fromInfo.code})</Text>
         <View style={styles.quickRow}>
           {QUICK_AMOUNTS.map((amt) => (
             <TouchableOpacity
@@ -201,10 +259,7 @@ export function CurrencyScreen() {
               style={[styles.quickBtn, fromValue === String(amt) && styles.quickBtnActive]}
               onPress={() => setFromValue(String(amt))}
             >
-              <Text style={[
-                styles.quickBtnText,
-                fromValue === String(amt) && styles.quickBtnTextActive,
-              ]}>
+              <Text style={[styles.quickBtnText, fromValue === String(amt) && styles.quickBtnTextActive]}>
                 {amt}
               </Text>
             </TouchableOpacity>
@@ -235,10 +290,7 @@ const styles = StyleSheet.create({
   },
 
   // Header
-  header: {
-    gap: 4,
-    paddingBottom: Spacing.xs,
-  },
+  header: { gap: 4, paddingBottom: Spacing.xs },
   title: {
     ...Typography.headlineMd,
     color: Colors.onSurface,
@@ -247,6 +299,32 @@ const styles = StyleSheet.create({
     ...Typography.bodySm,
     color: Colors.onSurfaceVariant,
     fontSize: 13,
+  },
+
+  // Pair tabs
+  pairTabs: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surfaceContainerHigh,
+    borderRadius: Radii.md,
+    borderWidth: 1,
+    borderColor: Colors.cardStroke,
+    overflow: 'hidden',
+  },
+  pairTab: {
+    flex: 1,
+    paddingVertical: Spacing.sm + 2,
+    alignItems: 'center',
+  },
+  pairTabActive: {
+    backgroundColor: Colors.primaryContainer,
+  },
+  pairTabText: {
+    ...Typography.labelMd,
+    color: Colors.onSurfaceVariant,
+    fontSize: 12,
+  },
+  pairTabTextActive: {
+    color: Colors.onPrimaryContainer,
   },
 
   // Rate strip
@@ -261,9 +339,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.primary + '44',
   },
-  rateInfo: {
-    gap: 2,
+  rateStripStale: {
+    borderColor: Colors.secondary + '55',
   },
+  rateInfo: { gap: 2 },
   rateMain: {
     ...Typography.headlineSm,
     color: Colors.primary,
@@ -273,6 +352,9 @@ const styles = StyleSheet.create({
     ...Typography.labelSm,
     color: Colors.onSurfaceVariant,
     fontSize: 11,
+  },
+  rateLabelStale: {
+    color: Colors.secondary,
   },
   refreshBtn: {
     width: 36,
@@ -302,10 +384,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  flag: {
-    fontSize: 32,
-    lineHeight: 38,
-  },
+  flag: { fontSize: 32, lineHeight: 38 },
   currencyCode: {
     ...Typography.headlineSm,
     color: Colors.onSurface,
@@ -355,10 +434,7 @@ const styles = StyleSheet.create({
   },
 
   // Quick amounts
-  quickSection: {
-    gap: Spacing.sm,
-    paddingTop: Spacing.xs,
-  },
+  quickSection: { gap: Spacing.sm, paddingTop: Spacing.xs },
   quickLabel: {
     ...Typography.labelMd,
     color: Colors.onSurfaceVariant,

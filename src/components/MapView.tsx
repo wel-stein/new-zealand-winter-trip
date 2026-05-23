@@ -1,17 +1,35 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { Colors } from '../constants/colors';
 import { Typography, Spacing, Radii } from '../constants/typography';
 import { getItineraryForDay, ITINERARY_BY_DAY } from '../data/itinerary';
 
 interface MapViewProps {
   selectedDay: number;
+  onDaySelect?: (day: number) => void;
 }
 
-export function MapView({ selectedDay }: MapViewProps) {
+export function MapView({ selectedDay, onDaySelect }: MapViewProps) {
   const dayData = getItineraryForDay(selectedDay);
   const currentIndex = ITINERARY_BY_DAY.findIndex((d) => d.day === selectedDay);
+
+  const webViewRef = useRef<any>(null);
+
+  // Handle marker tap messages from iframe (web platform)
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !onDaySelect) return;
+    const handler = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data?.type === 'daySelect' && typeof data.day === 'number') {
+          onDaySelect(data.day);
+        }
+      } catch {}
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [onDaySelect]);
 
   const mapHtml = useMemo(() => {
     const allPoints = ITINERARY_BY_DAY.map((d) => ({
@@ -41,10 +59,20 @@ export function MapView({ selectedDay }: MapViewProps) {
   .active-popup .leaflet-popup-content { margin: 8px 12px; }
   .popup-title { font-size: 13px; font-weight: 600; color: #95d4b3; }
   .popup-loc { font-size: 11px; color: #b0c4b8; margin-top: 2px; }
+  .tap-hint { font-size: 10px; color: #7a9a8a; margin-top: 4px; }
 </style>
 </head><body>
 <div id="map"></div>
 <script>
+  function sendMsg(day) {
+    var msg = JSON.stringify({ type: 'daySelect', day: day });
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(msg);
+    } else {
+      window.parent.postMessage(msg, '*');
+    }
+  }
+
   var map = L.map('map', { zoomControl: false, attributionControl: false })
     .setView([${dayData.lat}, ${dayData.lng}], ${selectedDay === 25 ? 5 : 9});
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -62,15 +90,16 @@ export function MapView({ selectedDay }: MapViewProps) {
     var icon = L.divIcon({
       className: '',
       html: p.active
-        ? '<div style="width:28px;height:28px;border-radius:50%;background:#1a5a3a;border:3px solid #95d4b3;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px #95d4b366"><div style="width:8px;height:8px;border-radius:50%;background:#95d4b3"></div></div>'
-        : '<div style="width:10px;height:10px;border-radius:50%;background:#95d4b355;border:1px solid #95d4b344"></div>',
-      iconSize: p.active ? [28, 28] : [10, 10],
-      iconAnchor: p.active ? [14, 14] : [5, 5]
+        ? '<div style="width:28px;height:28px;border-radius:50%;background:#1a5a3a;border:3px solid #95d4b3;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px #95d4b366;cursor:pointer"><div style="width:8px;height:8px;border-radius:50%;background:#95d4b3"></div></div>'
+        : '<div style="width:14px;height:14px;border-radius:50%;background:#95d4b533;border:1.5px solid #95d4b377;cursor:pointer"></div>',
+      iconSize: p.active ? [28, 28] : [14, 14],
+      iconAnchor: p.active ? [14, 14] : [7, 7]
     });
     var marker = L.marker([p.lat, p.lng], { icon: icon }).addTo(map);
+    marker.on('click', function() { sendMsg(p.day); });
     if (p.active) {
       marker.bindPopup(
-        '<div class="popup-title">' + p.title + '</div><div class="popup-loc">' + p.label + '</div>',
+        '<div class="popup-title">' + p.title + '</div><div class="popup-loc">' + p.label + '</div><div class="tap-hint">点击其他城市切换日期</div>',
         { className: 'active-popup', closeButton: false, autoClose: false, closeOnClick: false }
       ).openPopup();
     }
@@ -92,10 +121,19 @@ export function MapView({ selectedDay }: MapViewProps) {
           />
         ) : (
           <WebView
+            ref={webViewRef}
             source={{ html: mapHtml }}
             style={styles.webview}
             scrollEnabled={false}
             javaScriptEnabled
+            onMessage={(event: WebViewMessageEvent) => {
+              try {
+                const data = JSON.parse(event.nativeEvent.data);
+                if (data?.type === 'daySelect' && onDaySelect) {
+                  onDaySelect(data.day);
+                }
+              } catch {}
+            }}
           />
         )}
       </View>
