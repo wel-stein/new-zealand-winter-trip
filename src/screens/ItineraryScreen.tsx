@@ -48,7 +48,7 @@ export function ItineraryScreen() {
         <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
           {activeTab === 'text' && (
             <>
-              <ItinerarySection />
+              <ItinerarySection selectedDay={selectedDay} />
               <TipsSection />
             </>
           )}
