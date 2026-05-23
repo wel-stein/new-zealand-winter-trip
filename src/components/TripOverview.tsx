@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
@@ -31,10 +31,23 @@ function DatePickerDay({ day, dayName, weather, selected, onPress }: DatePickerD
       <Text style={[styles.dayNumber, selected && styles.dayNumberSelected]}>{day}</Text>
       <Ionicons
         name={WEATHER_ICONS[weather]}
-        size={16}
-        color={selected ? Colors.onPrimary : Colors.onSurfaceVariant}
+        size={15}
+        color={selected ? Colors.onPrimaryContainer : Colors.onSurfaceVariant}
       />
     </TouchableOpacity>
+  );
+}
+
+interface MonthLabelProps {
+  label: string;
+}
+
+function MonthLabel({ label }: MonthLabelProps) {
+  return (
+    <View style={styles.monthLabelWrapper}>
+      <Text style={styles.monthLabel}>{label}</Text>
+      <View style={styles.monthDivider} />
+    </View>
   );
 }
 
@@ -59,22 +72,28 @@ export function TripOverview({ selectedDay, onDaySelect }: TripOverviewProps) {
         </View>
       </View>
 
-      {/* Date picker */}
+      {/* Date picker – full May 25 → Jun 4 */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.datePicker}
       >
-        {DATE_PICKER_DAYS.map((item) => (
-          <DatePickerDay
-            key={item.day}
-            day={item.day}
-            dayName={item.dayName}
-            weather={item.weather}
-            selected={selectedDay === item.day}
-            onPress={() => onDaySelect(item.day)}
-          />
-        ))}
+        {DATE_PICKER_DAYS.map((item, index) => {
+          const isFirstItem = index === 0;
+          const showMonthLabel = isFirstItem || item.monthStart;
+          return (
+            <React.Fragment key={`${item.month}-${item.day}`}>
+              {showMonthLabel && <MonthLabel label={item.month} />}
+              <DatePickerDay
+                day={item.day}
+                dayName={item.dayName}
+                weather={item.weather}
+                selected={selectedDay === item.day}
+                onPress={() => onDaySelect(item.day)}
+              />
+            </React.Fragment>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -108,16 +127,17 @@ const styles = StyleSheet.create({
   },
   datePicker: {
     gap: Spacing.sm,
+    alignItems: 'flex-end',
     paddingRight: Spacing.sm,
   },
   dayButton: {
-    width: 60,
-    height: 84,
+    width: 56,
+    height: 80,
     borderRadius: Radii.md,
     backgroundColor: Colors.surfaceContainerHigh,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 3,
     borderWidth: 1,
     borderColor: Colors.cardStroke,
   },
@@ -128,7 +148,7 @@ const styles = StyleSheet.create({
   dayName: {
     ...Typography.labelSm,
     color: Colors.onSurfaceVariant,
-    fontSize: 11,
+    fontSize: 10,
   },
   dayNameSelected: {
     color: Colors.onPrimaryContainer,
@@ -136,10 +156,28 @@ const styles = StyleSheet.create({
   dayNumber: {
     ...Typography.headlineSm,
     color: Colors.onSurface,
-    fontSize: 22,
-    lineHeight: 26,
+    fontSize: 20,
+    lineHeight: 24,
   },
   dayNumberSelected: {
     color: Colors.onPrimaryContainer,
+  },
+  monthLabelWrapper: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    paddingBottom: Spacing.xs,
+    gap: 4,
+  },
+  monthLabel: {
+    ...Typography.labelSm,
+    color: Colors.primary,
+    fontSize: 11,
+    letterSpacing: 1,
+  },
+  monthDivider: {
+    width: 1,
+    height: 48,
+    backgroundColor: Colors.outlineVariant,
+    opacity: 0.6,
   },
 });

@@ -4,6 +4,8 @@ export interface DayWeather {
   day: number;
   dayName: string;
   weather: WeatherType;
+  month: '5月' | '6月';
+  monthStart?: boolean; // true for the first day of a new month in the list
 }
 
 export interface ItineraryItem {
@@ -37,11 +39,19 @@ export const TRIP_DAYS = 11;
 export const TRIP_DESTINATIONS = 4;
 
 export const DATE_PICKER_DAYS: DayWeather[] = [
-  { day: 25, dayName: '周一', weather: 'sunny' },
-  { day: 26, dayName: '周二', weather: 'cloudy' },
-  { day: 27, dayName: '周三', weather: 'partly-cloudy' },
-  { day: 28, dayName: '周四', weather: 'snowy' },
-  { day: 29, dayName: '周五', weather: 'rainy' },
+  // May
+  { day: 25, dayName: '周一', weather: 'sunny',        month: '5月' },
+  { day: 26, dayName: '周二', weather: 'cloudy',       month: '5月' },
+  { day: 27, dayName: '周三', weather: 'partly-cloudy',month: '5月' },
+  { day: 28, dayName: '周四', weather: 'snowy',        month: '5月' },
+  { day: 29, dayName: '周五', weather: 'rainy',        month: '5月' },
+  { day: 30, dayName: '周六', weather: 'cloudy',       month: '5月' },
+  { day: 31, dayName: '周日', weather: 'partly-cloudy',month: '5月' },
+  // June
+  { day: 1,  dayName: '周一', weather: 'sunny',        month: '6月', monthStart: true },
+  { day: 2,  dayName: '周二', weather: 'snowy',        month: '6月' },
+  { day: 3,  dayName: '周三', weather: 'cloudy',       month: '6月' },
+  { day: 4,  dayName: '周四', weather: 'partly-cloudy',month: '6月' },
 ];
 
 export const HERO_CHAPTER = {
