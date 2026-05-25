@@ -22,8 +22,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(413).json({ error: 'File too large (max 10 MB)' });
   }
 
+  const prefix = (req.query.prefix as string) || 'photos';
+  const baseName = (req.query.name as string) || `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const ext = contentType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
-  const filename = `photos/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const filename = `${prefix}/${baseName}.${ext}`;
 
   try {
     const blob = await put(filename, req, {
