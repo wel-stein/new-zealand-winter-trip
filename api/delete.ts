@@ -12,7 +12,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    await del(url);
+    const parsed = new URL(url);
+    if (!parsed.pathname.startsWith('/photos/') && !parsed.pathname.startsWith('/thumbs/')) {
+      return res.status(403).json({ error: 'Cannot delete files outside photos/thumbs' });
+    }
+
+    const thumbUrl = url.replace('/photos/', '/thumbs/');
+    await Promise.all([del(url), del(thumbUrl).catch(() => {})]);
+
     return res.status(200).json({ success: true });
   } catch (e: any) {
     console.error('Delete failed:', e);
