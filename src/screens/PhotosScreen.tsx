@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, Image,
-  StyleSheet, ActivityIndicator, Modal, Dimensions, Platform,
+  StyleSheet, ActivityIndicator, Modal, Dimensions, Platform, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -135,9 +135,10 @@ export function PhotosScreen() {
           body: thumb,
         }),
       ]);
-      if (!fullRes.ok) {
-        const data = await fullRes.json().catch(() => ({}));
-        throw new Error(data.error || `Upload failed (${fullRes.status})`);
+      if (!fullRes.ok || !thumbRes.ok) {
+        const failedRes = !fullRes.ok ? fullRes : thumbRes;
+        const data = await failedRes.json().catch(() => ({}));
+        throw new Error(data.error || `Upload failed (${failedRes.status})`);
       }
       await fetchPhotos();
     } catch (e: any) {
@@ -147,7 +148,7 @@ export function PhotosScreen() {
     }
   }, [fetchPhotos]);
 
-  const handleDelete = useCallback(async (photo: Photo) => {
+  const executeDelete = useCallback(async (photo: Photo) => {
     setDeleting(true);
     try {
       const res = await fetch(`/api/delete?url=${encodeURIComponent(photo.url)}`, {
@@ -165,6 +166,13 @@ export function PhotosScreen() {
       setDeleting(false);
     }
   }, [fetchPhotos]);
+
+  const handleDelete = useCallback((photo: Photo) => {
+    Alert.alert('删除照片', '确定要删除这张照片吗？此操作不可撤销。', [
+      { text: '取消', style: 'cancel' },
+      { text: '删除', style: 'destructive', onPress: () => executeDelete(photo) },
+    ]);
+  }, [executeDelete]);
 
   return (
     <View style={styles.container}>

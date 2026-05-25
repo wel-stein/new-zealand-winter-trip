@@ -49,7 +49,7 @@ export function useWeather(lat: number, lng: number) {
   const [stale, setStale]   = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
     const cacheKey = `weather_${lat.toFixed(2)}_${lng.toFixed(2)}`;
     setLoading(true);
     setStale(false);
@@ -58,9 +58,10 @@ export function useWeather(lat: number, lng: number) {
       try {
         const res  = await fetch(
           `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code&timezone=auto`,
+          { signal: controller.signal },
         );
         const json = await res.json();
-        if (cancelled) return;
+        if (controller.signal.aborted) return;
         const code: number = json?.current?.weather_code ?? 3;
         const temp: number = json?.current?.temperature_2m ?? 0;
         const wmo  = getWmo(code);
@@ -69,7 +70,7 @@ export function useWeather(lat: number, lng: number) {
         setStale(false);
         await AsyncStorage.setItem(cacheKey, JSON.stringify(data));
       } catch {
-        if (cancelled) return;
+        if (controller.signal.aborted) return;
         try {
           const cached = await AsyncStorage.getItem(cacheKey);
           if (cached) {
@@ -79,14 +80,14 @@ export function useWeather(lat: number, lng: number) {
             setWeather(null);
           }
         } catch {
-          if (!cancelled) setWeather(null);
+          if (!controller.signal.aborted) setWeather(null);
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => { controller.abort(); };
   }, [lat, lng]);
 
   return { weather, loading, stale };

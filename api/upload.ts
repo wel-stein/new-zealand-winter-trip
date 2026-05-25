@@ -22,15 +22,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(413).json({ error: 'File too large (max 10 MB)' });
   }
 
-  const prefix = (req.query.prefix as string) || 'photos';
-  const baseName = (req.query.name as string) || `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const rawPrefix = (req.query.prefix as string) || 'photos';
+  if (rawPrefix !== 'photos' && rawPrefix !== 'thumbs') {
+    return res.status(400).json({ error: 'Invalid prefix (must be photos or thumbs)' });
+  }
+  const rawName = (req.query.name as string) || `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const baseName = rawName.replace(/[^a-zA-Z0-9_-]/g, '');
   const ext = contentType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
-  const filename = `${prefix}/${baseName}.${ext}`;
+  const filename = `${rawPrefix}/${baseName}.${ext}`;
 
   try {
     const blob = await put(filename, req, {
       access: 'public',
       contentType,
+      cacheControlMaxAge: 31536000,
     });
     return res.status(200).json(blob);
   } catch (e: any) {
