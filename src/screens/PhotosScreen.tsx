@@ -33,6 +33,41 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+const MAX_DIMENSION = 1080;
+const JPEG_QUALITY = 0.8;
+
+function compressImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas not supported'));
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('Compression failed'))),
+        'image/jpeg',
+        JPEG_QUALITY,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image'));
+    };
+    img.src = url;
+  });
+}
+
 function openFilePicker(capture: boolean, onFile: (file: File) => void) {
   if (Platform.OS !== 'web') return;
   const input = document.createElement('input');
@@ -85,10 +120,11 @@ export function PhotosScreen() {
     setUploading(true);
     setError(null);
     try {
+      const compressed = await compressImage(file);
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Content-Type': file.type },
-        body: file,
+        headers: { 'Content-Type': 'image/jpeg' },
+        body: compressed,
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
