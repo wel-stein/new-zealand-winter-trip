@@ -16,6 +16,8 @@
     "@expo/metro-runtime": "~3.2.3",
     "@expo/vector-icons": "^14.0.2",
     "@react-native-async-storage/async-storage": "^2.0.0",
+    "@vercel/blob": "^2.4.0",
+    "@vercel/node": "^5.8.4",
     "expo": "~51.0.28",
     "expo-asset": "^56.0.13",
     "expo-blur": "~13.0.2",
