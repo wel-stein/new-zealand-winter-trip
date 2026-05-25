@@ -33,37 +33,34 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-const MAX_DIMENSION = 1080;
-const JPEG_QUALITY = 0.8;
+function resizeToBlob(img: HTMLImageElement, maxDim: number, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    let { width, height } = img;
+    if (width > maxDim || height > maxDim) {
+      const ratio = Math.min(maxDim / width, maxDim / height);
+      width = Math.round(width * ratio);
+      height = Math.round(height * ratio);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return reject(new Error('Canvas not supported'));
+    ctx.drawImage(img, 0, 0, width, height);
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('Compression failed'))),
+      'image/jpeg',
+      quality,
+    );
+  });
+}
 
-function compressImage(file: File): Promise<Blob> {
+function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      let { width, height } = img;
-      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
-        const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return reject(new Error('Canvas not supported'));
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error('Compression failed'))),
-        'image/jpeg',
-        JPEG_QUALITY,
-      );
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Failed to load image'));
-    };
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
     img.src = url;
   });
 }
@@ -120,15 +117,27 @@ export function PhotosScreen() {
     setUploading(true);
     setError(null);
     try {
-      const compressed = await compressImage(file);
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'image/jpeg' },
-        body: compressed,
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Upload failed (${res.status})`);
+      const img = await loadImage(file);
+      const name = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const [full, thumb] = await Promise.all([
+        resizeToBlob(img, 1080, 0.8),
+        resizeToBlob(img, 300, 0.6),
+      ]);
+      const [fullRes, thumbRes] = await Promise.all([
+        fetch(`/api/upload?name=${name}&prefix=photos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'image/jpeg' },
+          body: full,
+        }),
+        fetch(`/api/upload?name=${name}&prefix=thumbs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'image/jpeg' },
+          body: thumb,
+        }),
+      ]);
+      if (!fullRes.ok) {
+        const data = await fullRes.json().catch(() => ({}));
+        throw new Error(data.error || `Upload failed (${fullRes.status})`);
       }
       await fetchPhotos();
     } catch (e: any) {
@@ -231,18 +240,21 @@ export function PhotosScreen() {
           </View>
         ) : (
           <View style={styles.grid}>
-            {photos.map((photo) => (
-              <TouchableOpacity
-                key={photo.url}
-                onPress={() => setSelectedPhoto(photo)}
-                activeOpacity={0.8}
-              >
-                <Image
-                  source={{ uri: photo.url }}
-                  style={[styles.thumb, { width: thumbSize, height: thumbSize }]}
-                />
-              </TouchableOpacity>
-            ))}
+            {photos.map((photo) => {
+              const thumbUrl = photo.url.replace('/photos/', '/thumbs/');
+              return (
+                <TouchableOpacity
+                  key={photo.url}
+                  onPress={() => setSelectedPhoto(photo)}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={{ uri: thumbUrl }}
+                    style={[styles.thumb, { width: thumbSize, height: thumbSize }]}
+                  />
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
 
