@@ -33,6 +33,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(blob);
   } catch (e: any) {
     console.error('Upload failed:', e);
-    return res.status(500).json({ error: 'Upload failed. Is BLOB_READ_WRITE_TOKEN configured?' });
+    return res.status(500).json({ error: `Upload failed: ${e.message || 'Unknown error'}` });
   }
 }

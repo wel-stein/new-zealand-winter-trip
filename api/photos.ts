@@ -18,6 +18,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ photos });
   } catch (e: any) {
     console.error('List failed:', e);
-    return res.status(500).json({ error: 'Failed to list photos. Is BLOB_READ_WRITE_TOKEN configured?' });
+    return res.status(500).json({ error: `Failed to list photos: ${e.message || 'Unknown error'}` });
   }
 }
