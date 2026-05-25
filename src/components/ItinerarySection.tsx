@@ -48,6 +48,18 @@ async function saveCompleted(ids: Set<string>): Promise<void> {
   } catch {}
 }
 
+// ─── Auto-complete past days ─────────────────────────────────────────────────
+
+function isDayInPast(day: number): boolean {
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
+  const todayOrd = currentMonth * 100 + currentDay;
+  const dayMonth = day >= 25 ? 5 : 6;
+  const dayOrd = dayMonth * 100 + day;
+  return dayOrd < todayOrd;
+}
+
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface ItinerarySectionProps {
@@ -99,9 +111,14 @@ export function ItinerarySection({
 
   const filteredItems = dayData.items.filter((item) => matchesFilter(item, filter));
 
+  // Auto-complete all items for past days
+  const dayPast = isDayInPast(selectedDay);
+
   // Day completion progress
-  const completedCount = dayData.items.filter((item) => completedIds.has(item.id)).length;
   const totalCount = dayData.items.length;
+  const completedCount = dayPast
+    ? totalCount
+    : dayData.items.filter((item) => completedIds.has(item.id)).length;
   const progress = totalCount > 0 ? completedCount / totalCount : 0;
 
   return (
@@ -179,8 +196,8 @@ export function ItinerarySection({
                 item={item}
                 isLast={isLast}
                 nextDrive={nextItem?.drive}
-                completed={completedIds.has(item.id)}
-                onToggleComplete={storageReady ? toggleComplete : undefined}
+                completed={dayPast || completedIds.has(item.id)}
+                onToggleComplete={dayPast ? undefined : (storageReady ? toggleComplete : undefined)}
               />
             );
           })
