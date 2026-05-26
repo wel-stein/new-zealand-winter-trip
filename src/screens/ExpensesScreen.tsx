@@ -76,20 +76,28 @@ export function ExpensesScreen() {
   const fetchRate = useCallback(async () => {
     setRateLoading(true);
     try {
+      const cached = await AsyncStorage.getItem('currency_rates_v2');
+      if (cached) {
+        const rates = JSON.parse(cached);
+        if (rates.nzdMyr) {
+          setNzdToMyr(rates.nzdMyr);
+          setRateLoading(false);
+          return;
+        }
+      }
+    } catch {}
+    try {
       const res = await fetch('https://open.er-api.com/v6/latest/NZD');
       const json = await res.json();
       if (json?.rates?.MYR) {
         setNzdToMyr(json.rates.MYR);
-        await AsyncStorage.setItem('nzd_myr_rate', String(json.rates.MYR));
+        await AsyncStorage.setItem('currency_rates_v2', JSON.stringify({
+          nzdMyr: json.rates.MYR,
+          nzdSgd: json.rates.SGD || 0,
+        }));
       }
-    } catch {
-      try {
-        const cached = await AsyncStorage.getItem('nzd_myr_rate');
-        if (cached) setNzdToMyr(parseFloat(cached));
-      } catch {}
-    } finally {
-      setRateLoading(false);
-    }
+    } catch {}
+    setRateLoading(false);
   }, []);
 
   useEffect(() => { fetchRate(); }, [fetchRate]);
