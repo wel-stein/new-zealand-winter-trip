@@ -16,12 +16,7 @@ interface Photo {
 }
 
 const COLUMN_COUNT = 3;
-const GAP = 4;
-
-function getThumbSize() {
-  const screenWidth = Dimensions.get('window').width;
-  return (screenWidth - Spacing.marginMobile * 2 - GAP * (COLUMN_COUNT - 1)) / COLUMN_COUNT;
-}
+const GAP = 3;
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -88,8 +83,9 @@ export function PhotosScreen() {
   const [error, setError] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [gridWidth, setGridWidth] = useState(Dimensions.get('window').width - Spacing.marginMobile * 2);
 
-  const thumbSize = getThumbSize();
+  const thumbSize = Math.floor((gridWidth - GAP * (COLUMN_COUNT - 1)) / COLUMN_COUNT);
 
   const fetchPhotos = useCallback(async () => {
     setLoading(true);
@@ -253,7 +249,10 @@ export function PhotosScreen() {
             </Text>
           </View>
         ) : (
-          <View style={styles.grid}>
+          <View
+            style={styles.grid}
+            onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}
+          >
             {photos.map((photo) => {
               const thumbUrl = photo.url.replace('/photos/', '/thumbs/');
               return (
