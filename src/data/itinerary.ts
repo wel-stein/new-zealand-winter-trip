@@ -94,7 +94,7 @@ export const ITINERARY_BY_DAY: DayItinerary[] = [
       { id: '25-2', time: '21:00', title: '起飞 → 墨尔本 (MEL)', tag: '飞行', tagColor: TAG.flight, category: 'departure', image: IMAGES.melbourne_flight,
         description: '飞行约 7 小时抵达墨尔本，在国际隔离区中转约 4 小时 50 分，行李直挂无需取件，无需澳洲签证。' },
       { id: '25-3', time: '次日', title: '墨尔本 → 基督城 (CHC)', tag: '飞行', tagColor: TAG.flight, category: 'departure',
-        description: '再飞约 3 小时抵达新西兰基督城。时区提醒：新西兰比马来西亚快 5 小时，比墨尔本快 2 小时。' },
+        description: '再飞约 3 小时抵达新西兰基督城。时区提醒：新西兰比马来西亚快 4 小时，比墨尔本快 2 小时。' },
     ],
   },
 
