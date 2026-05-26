@@ -168,10 +168,16 @@ export function PhotosScreen() {
   }, [fetchPhotos]);
 
   const handleDelete = useCallback((photo: Photo) => {
-    Alert.alert('删除照片', '确定要删除这张照片吗？此操作不可撤销。', [
-      { text: '取消', style: 'cancel' },
-      { text: '删除', style: 'destructive', onPress: () => executeDelete(photo) },
-    ]);
+    if (Platform.OS === 'web') {
+      if (window.confirm('确定要删除这张照片吗？此操作不可撤销。')) {
+        executeDelete(photo);
+      }
+    } else {
+      Alert.alert('删除照片', '确定要删除这张照片吗？此操作不可撤销。', [
+        { text: '取消', style: 'cancel' },
+        { text: '删除', style: 'destructive', onPress: () => executeDelete(photo) },
+      ]);
+    }
   }, [executeDelete]);
 
   return (
