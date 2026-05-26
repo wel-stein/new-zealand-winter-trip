@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, ActivityIndicator, Platform,
+  StyleSheet, ActivityIndicator, Platform, Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../constants/colors';
 import { Typography, Spacing, Radii } from '../constants/typography';
 
@@ -67,6 +68,33 @@ export function ExpensesScreen() {
   const [category, setCategory] = useState<CategoryKey>('dining');
   const [description, setDescription] = useState('');
   const [expenseDate, setExpenseDate] = useState(getTripDate);
+
+  const [showMYR, setShowMYR] = useState(false);
+  const [nzdToMyr, setNzdToMyr] = useState<number | null>(null);
+  const [rateLoading, setRateLoading] = useState(false);
+
+  const fetchRate = useCallback(async () => {
+    setRateLoading(true);
+    try {
+      const res = await fetch('https://open.er-api.com/v6/latest/NZD');
+      const json = await res.json();
+      if (json?.rates?.MYR) {
+        setNzdToMyr(json.rates.MYR);
+        await AsyncStorage.setItem('nzd_myr_rate', String(json.rates.MYR));
+      }
+    } catch {
+      try {
+        const cached = await AsyncStorage.getItem('nzd_myr_rate');
+        if (cached) setNzdToMyr(parseFloat(cached));
+      } catch {}
+    } finally {
+      setRateLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchRate(); }, [fetchRate]);
+
+  const toMYR = (nzd: number) => nzdToMyr ? nzd * nzdToMyr : nzd;
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true);
@@ -169,17 +197,46 @@ export function ExpensesScreen() {
 
         {/* Total card */}
         <View style={styles.totalCard}>
-          <Text style={styles.totalLabel}>总开销 (NZD)</Text>
-          <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+          <View style={styles.totalHeader}>
+            <Text style={styles.totalLabel}>
+              总开销 ({showMYR ? 'MYR' : 'NZD'})
+            </Text>
+            <TouchableOpacity
+              style={[styles.currencyToggle, showMYR && styles.currencyToggleActive]}
+              onPress={() => setShowMYR((v) => !v)}
+              activeOpacity={0.7}
+              disabled={rateLoading}
+            >
+              {rateLoading ? (
+                <ActivityIndicator size="small" color={Colors.primary} />
+              ) : (
+                <>
+                  <Text style={styles.currencyToggleFlag}>{showMYR ? '🇳🇿' : '🇲🇾'}</Text>
+                  <Text style={styles.currencyToggleText}>
+                    {showMYR ? '切换 NZD' : '切换 RM'}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.totalAmount}>
+            {showMYR ? 'RM ' : '$'}{(showMYR ? toMYR(total) : total).toFixed(2)}
+          </Text>
+          {showMYR && nzdToMyr && (
+            <Text style={styles.rateHint}>1 NZD = {nzdToMyr.toFixed(4)} MYR</Text>
+          )}
           {categoryTotals.length > 0 && (
             <View style={styles.categoryBreakdown}>
               {categoryTotals.map(({ key, total: catTotal }) => {
                 const cat = CATEGORIES[key];
+                const displayAmount = showMYR ? toMYR(catTotal) : catTotal;
                 return (
                   <View key={key} style={styles.catRow}>
                     <View style={[styles.catDot, { backgroundColor: cat.color }]} />
                     <Text style={styles.catLabel}>{cat.label}</Text>
-                    <Text style={styles.catAmount}>${catTotal.toFixed(2)}</Text>
+                    <Text style={styles.catAmount}>
+                      {showMYR ? 'RM ' : '$'}{displayAmount.toFixed(2)}
+                    </Text>
                   </View>
                 );
               })}
@@ -320,7 +377,10 @@ export function ExpensesScreen() {
               <View style={styles.dateHeader}>
                 <Text style={styles.dateLabel}>{formatDate(date)}</Text>
                 <Text style={styles.dateTotalLabel}>
-                  ${groupedByDate[date].reduce((s, e) => s + e.amount, 0).toFixed(2)}
+                  {showMYR ? 'RM ' : '$'}{(showMYR
+                    ? toMYR(groupedByDate[date].reduce((s, e) => s + e.amount, 0))
+                    : groupedByDate[date].reduce((s, e) => s + e.amount, 0)
+                  ).toFixed(2)}
                 </Text>
               </View>
               {groupedByDate[date].map((expense) => {
@@ -336,7 +396,9 @@ export function ExpensesScreen() {
                         <Text style={styles.expenseDesc} numberOfLines={1}>{expense.description}</Text>
                       ) : null}
                     </View>
-                    <Text style={styles.expenseAmount}>${expense.amount.toFixed(2)}</Text>
+                    <Text style={styles.expenseAmount}>
+                      {showMYR ? 'RM ' : '$'}{(showMYR ? toMYR(expense.amount) : expense.amount).toFixed(2)}
+                    </Text>
                     <TouchableOpacity
                       onPress={() => handleDelete(expense.id)}
                       style={styles.deleteBtn}
@@ -376,7 +438,30 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary + '44',
     gap: Spacing.md,
   },
+  totalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   totalLabel: { ...Typography.labelMd, color: Colors.onSurfaceVariant, fontSize: 12 },
+  currencyToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.surfaceContainerHigh,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: Spacing.xs + 1,
+    borderRadius: Radii.full,
+    borderWidth: 1,
+    borderColor: Colors.cardStroke,
+  },
+  currencyToggleActive: {
+    backgroundColor: Colors.secondary + '22',
+    borderColor: Colors.secondary + '55',
+  },
+  currencyToggleFlag: { fontSize: 14 },
+  currencyToggleText: { ...Typography.labelSm, color: Colors.onSurfaceVariant, fontSize: 11 },
+  rateHint: { ...Typography.labelSm, color: Colors.onSurfaceVariant, fontSize: 10, marginTop: -Spacing.sm },
   totalAmount: { ...Typography.displayLg, color: Colors.primary, fontSize: 36 },
   categoryBreakdown: { gap: Spacing.sm, paddingTop: Spacing.xs },
   catRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
